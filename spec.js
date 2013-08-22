@@ -217,7 +217,7 @@
           App.get("Todos").push(new Todo({
             Title: "Todo3",
             IsDone: true,
-            Category: "One"
+            Category: "Two"
           }));
           return expect($('#todoloop > li')).toHaveLength(3);
         });
@@ -235,11 +235,10 @@
           }));
           $todo4 = $('#todoloop > li').eq(3);
           $todo5 = $('#todoloop > li').eq(4);
-          expect($todo4.find(':checked').length).toEqual(0);
-          expect($todo4.find('span').html()).toEqual("Todo4");
+          expect($todo4.find('span[cydr-content]').html()).toEqual("Todo4");
           expect($todo4.hasClass("done")).toBeFalsy();
           expect($todo5.find('input')).toBeChecked();
-          expect($todo5.find('span').html()).toEqual("Todo5");
+          expect($todo5.find('span[cydr-content]').html()).toEqual("Todo5");
           return expect($todo5).toHaveClass("done");
         });
       });

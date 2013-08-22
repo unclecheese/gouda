@@ -156,7 +156,6 @@
       this.model = model;
       attValue = this.element.getAttribute(this.getBindingAttribute());
       this.bindingExec = attValue;
-      this.importFunction = this.createImportFunction();
     }
 
     Binding.prototype.init = function() {
@@ -193,12 +192,7 @@
     };
 
     Binding.prototype.getValue = function() {
-      var result;
-      result = this.importFunction(this.model);
-      if (typeof result === "function") {
-        return result.call(this.model);
-      }
-      return result;
+      return this.model.exec(this.bindingExec);
     };
 
     Binding.prototype.getController = function() {
@@ -281,7 +275,7 @@
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           opt = _ref[_i];
-          if (opt.value === this.getValue()) {
+          if (opt.value === this.getValue().toString()) {
             opt.selected = true;
             break;
           } else {
@@ -341,14 +335,14 @@
     }
 
     ExtraclassesBinding.prototype.importValue = function() {
-      var cssClass, exec, newClass, result, rx, _ref, _results;
-      if (typeof this.getValue() !== "object") {
+      var cssClass, exec, newClass, obj, result, rx, _results;
+      obj = this.model.exec(this.bindingExec);
+      if (typeof obj !== "object") {
         console.error("Extraclasses binding must return a JSON object of classname: property/function pairs.");
       }
-      _ref = this.getValue();
       _results = [];
-      for (cssClass in _ref) {
-        exec = _ref[cssClass];
+      for (cssClass in obj) {
+        exec = obj[cssClass];
         rx = new RegExp("(^|\\s)" + cssClass, "g");
         newClass = this.element.className.replace(rx, "");
         if (typeof exec === "function") {
@@ -451,7 +445,7 @@
       var _this = this;
       this.element.addEventListener("click", function(e) {
         e.preventDefault();
-        return _this.importFunction(_this.model);
+        return _this.model.exec(_this.bindingExec);
       });
       return ClickBinding.__super__.init.call(this);
     };
@@ -529,7 +523,7 @@
     LoopBinding.prototype.importValue = function() {
       var i, list, model, n, node, _i, _len, _ref, _results;
       this.clearContents();
-      list = this.model.get(this.bindingExec);
+      list = this.model.obj(this.bindingExec);
       _ref = list.getItems();
       _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
@@ -574,12 +568,18 @@
     OptionsBinding.prototype.collection = null;
 
     OptionsBinding.prototype.init = function() {
+      var v;
       if (this.element.tagName !== "SELECT") {
         alert("cydr-options binding must be on a select element.");
       }
       this.valueField = this.element.getAttribute("cydr-optionvalue");
       this.textField = this.element.getAttribute("cydr-optiontext");
       this.caption = this.element.getAttribute("cydr-optioncaption");
+      v = this.element.getAttribute("cydr-value");
+      if (v) {
+        this.element.removeAttribute("cydr-value");
+        this.element.setAttribute("cydr-value", v);
+      }
       Cydr.prototype.registerModelBinding(this.model, this);
       return this.importValue();
     };
@@ -593,7 +593,7 @@
         dummy.innerHTML = this.caption;
         this.element.appendChild(dummy);
       }
-      list = this.model.get(this.bindingExec);
+      list = this.model.exec(this.bindingExec);
       _ref = list.getItems();
       _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
@@ -723,6 +723,8 @@
 
     Model.prototype.casting = {};
 
+    Model.prototype.expressions = {};
+
     Model.prototype._mutatedProperties = {};
 
     Model.prototype._mutatedCollections = {};
@@ -785,14 +787,29 @@
     };
 
     Model.prototype.obj = function(prop) {
-      if ((!this.hasProp(prop)) && (!this.hasCollection(prop))) {
+      if ((!this.hasProp(prop)) && (!this.hasCollection(prop)) && (typeof this[prop] === "function")) {
         return this.castFunction(prop);
       }
       return this._mutatedProperties[prop] || this._mutatedCollections[prop];
     };
 
+    Model.prototype.exec = function(exp) {
+      var result;
+      if (typeof this[exp] === "function") {
+        return this[exp].call(this);
+      }
+      if (!this.expressions[exp]) {
+        this.expressions[exp] = new Function("scope", "with(scope) {return " + exp + ";}");
+      }
+      result = this.expressions[exp](this);
+      if (typeof result === "function") {
+        result.apply(this, [this]);
+      }
+      return result;
+    };
+
     Model.prototype.get = function(prop) {
-      if ((!this.hasProp(prop)) && (!this.hasCollection(prop))) {
+      if ((!this.hasProp(prop)) && (!this.hasCollection(prop)) && (typeof this[prop] === "function")) {
         return this.castFunction(prop);
       } else {
         if (Cydr.prototype.isAnalyzing()) {
@@ -834,6 +851,10 @@
 
     Model.prototype.getID = function() {
       return this._mutatedProperties["__id__"];
+    };
+
+    Model.prototype.Up = function() {
+      return this.controller;
     };
 
     Model.prototype.bindToElement = function(el) {

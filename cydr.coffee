@@ -100,7 +100,6 @@ class Cydr.Binding extends Cydr.Object
 		@model = model
 		attValue = @element.getAttribute @getBindingAttribute()
 		@bindingExec = attValue		
-		@importFunction = @createImportFunction()
 
 
 	init: ->
@@ -131,11 +130,8 @@ class Cydr.Binding extends Cydr.Object
 		new Cydr[@getClass()] model, element
 
 
-	getValue: ->			
-		result = @importFunction @model				
-		if typeof result is "function"			
-			return result.call @model		
-		result
+	getValue: ->		
+		@model.exec @bindingExec
 
 	getController: ->
 		node = @element
@@ -173,12 +169,12 @@ class Cydr.ValueBinding extends Cydr.Binding
 
 	exportValueEvent: "change"
 
-	importValue: ->
+	importValue: ->		
 		if @element.tagName is "INPUT"
 			@element.value = @getValue()
-		else if @element.tagName is "SELECT"			
+		else if @element.tagName is "SELECT"
 			for opt in @element.options				
-				if opt.value is @getValue()
+				if opt.value is @getValue().toString()
 					opt.selected = true
 					break
 
@@ -196,7 +192,7 @@ class Cydr.CheckedBinding extends Cydr.Binding
 
 	exportValueEvent: "change"
 
-	importValue: ->				
+	importValue: ->			
 		if not @getValue().isFalsy() then @element.setAttribute "checked", "checked" else @element.removeAttribute "checked"
 
 	exportValue: ->
@@ -205,9 +201,10 @@ class Cydr.CheckedBinding extends Cydr.Binding
 class Cydr.ExtraclassesBinding extends Cydr.Binding
 
 	importValue: ->	
-		if typeof @getValue() isnt "object"
+		obj = @model.exec(@bindingExec)
+		if typeof obj isnt "object"
 			console.error "Extraclasses binding must return a JSON object of classname: property/function pairs."					
-		for cssClass, exec of @getValue()
+		for cssClass, exec of obj
 			rx = new RegExp "(^|\\s)#{cssClass}", "g"
 			newClass = @element.className.replace rx, ""			
 			if typeof exec is "function"				
@@ -241,7 +238,7 @@ class Cydr.ClickBinding extends Cydr.Binding
 	init: ->		
 		@element.addEventListener "click", (e) =>
 			e.preventDefault()			
-			@importFunction @model
+			@model.exec @bindingExec
 		super()
 
 
@@ -280,7 +277,7 @@ class Cydr.LoopBinding extends Cydr.Binding
 
 	importValue: ->
 		@clearContents()
-		list = @model.get @bindingExec		
+		list = @model.obj @bindingExec		
 		for model, i in list.getItems()							
 			for node in @nodes				
 				n = node.cloneNode true
@@ -306,6 +303,12 @@ class Cydr.OptionsBinding extends Cydr.LoopBinding
 		@valueField = @element.getAttribute "cydr-optionvalue"
 		@textField = @element.getAttribute "cydr-optiontext"
 		@caption = @element.getAttribute "cydr-optioncaption"
+		
+		# ensure the value attribute goes last
+		v = @element.getAttribute "cydr-value"
+		if v
+			@element.removeAttribute "cydr-value"
+			@element.setAttribute "cydr-value", v
 		Cydr::registerModelBinding @model, @
 		@importValue()
 
@@ -316,7 +319,7 @@ class Cydr.OptionsBinding extends Cydr.LoopBinding
 			dummy.setAttribute "value", ""
 			dummy.innerHTML = @caption
 			@element.appendChild dummy
-		list = @model.get @bindingExec
+		list = @model.exec @bindingExec
 		for model, i in list.getItems()			
 			opt = document.createElement "option"
 			opt.setAttribute "cydr-content", @textField
@@ -390,6 +393,8 @@ class Cydr.Model extends Cydr.Object
 
 	casting: {}
 
+	expressions: {}
+
 	_mutatedProperties: {}
 
 	_mutatedCollections: {}
@@ -435,15 +440,27 @@ class Cydr.Model extends Cydr.Object
 
 
 	obj: (prop) ->
-		if (not @hasProp prop) and (not @hasCollection prop)
+		if (not @hasProp prop) and (not @hasCollection prop) and (typeof @[prop] is "function")
 			return @castFunction prop		
 		@_mutatedProperties[prop] or @_mutatedCollections[prop]
 
 
-	get: (prop) ->
-		if (not @hasProp prop) and (not @hasCollection prop)			
+	exec: (exp) ->
+		if typeof @[exp] is "function"
+			return @[exp].call @
+		if not @expressions[exp]			
+			@expressions[exp] = new Function "scope", "with(scope) {return #{exp};}"
+		result = @expressions[exp](@)
+		if typeof result is "function"
+			result.apply @, [@]
+		result
+
+
+
+	get: (prop) ->		
+		if (not @hasProp prop) and (not @hasCollection prop) and (typeof @[prop] is "function")			
 			return @castFunction prop
-		else
+		else			
 			if Cydr::isAnalyzing()
 				Cydr::registerFunctionDependency @getClass(), prop
 			if @_mutatedProperties[prop]
@@ -476,6 +493,9 @@ class Cydr.Model extends Cydr.Object
 
 	getID: ->
 		@_mutatedProperties["__id__"]
+
+	Up: ->
+		@controller
 
 
 	bindToElement: (el) ->		

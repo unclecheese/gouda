@@ -60,14 +60,17 @@
   <a cydr-click="set('FirstName','Susan')"></a>
   <div cydr-visible="IsMember"></div>
   <div cydr-hidden="IsMember"></div>
-  <h1>Hello, <span id="fullname" cydr-content="FullName"></span></h1>
+  <h1>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></h1>
   <h2>You have <span id="todocount" cydr-content="Todos().count()"></span> todos</h2>
 
   Filter by category:
   <select cydr-options="Categories" cydr-optiontext="Title" cydr-optionvalue="Title" cydr-optioncaption="Please select..."></select>
-  
+
   <ul id="todoloop" cydr-loop="Todos">
-      <li cydr-extraclasses="{done: IsDone}"><input type="checkbox" cydr-checked="IsDone" /> <span cydr-content="Title"></span></li>
+      <li cydr-extraclasses="{done: IsDone}">
+        <input type="checkbox" cydr-checked="IsDone" /> <span cydr-content="Title"></span> [<span cydr-content="Category"></span>]
+        <select cydr-value="Category" cydr-options="Up().Categories()" cydr-optiontext="Title" cydr-optionvalue="Title"  ></select>
+      </li>
 
   </ul>
 
