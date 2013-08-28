@@ -39,7 +39,6 @@
         }
         execJasmine();
       };
-
       function execJasmine() {
         jasmineEnv.execute();
       }
@@ -60,20 +59,36 @@
   <a cydr-click="set('FirstName','Susan')"></a>
   <div cydr-visible="IsMember"></div>
   <div cydr-hidden="IsMember"></div>
-  <h1>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></h1>
+  <h;1>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></h1>
   <h2>You have <span id="todocount" cydr-content="Todos().count()"></span> todos</h2>
 
+  <div style="float:left;width:300px">
+    All Todos:
+    <ul id="todoloop" cydr-loop="Todos">
+        <li cydr-extraclasses="{done: IsDone}">
+          <input type="checkbox" cydr-checked="IsDone" /> <span cydr-content="Title"></span> [<span cydr-content="Category"></span>]
+          <select cydr-value="Category" cydr-options="Up().Categories()" cydr-optiontext="Title" cydr-optionvalue="Title"  ></select>
+        </li>
+
+    </ul>
+  </div>
+  <div style="float:left;width:300px">
   Filter by category:
-  <select cydr-options="Categories" cydr-optiontext="Title" cydr-optionvalue="Title" cydr-optioncaption="Please select..."></select>
+    <select id="optionsbinding" cydr-options="Categories" cydr-optiontext="Title" cydr-optionvalue="Title" cydr-value="CategoryFilter"></select>
+    (<span cydr-content="CategoryFilter"></span>)
+    <ul id="fiteredtodoloop" cydr-loop="FilteredTodos">
+      <li><i cydr-content="Title"></i> <i cydr-content="Category"></i></li>
+    </ul>
 
-  <ul id="todoloop" cydr-loop="Todos">
-      <li cydr-extraclasses="{done: IsDone}">
-        <input type="checkbox" cydr-checked="IsDone" /> <span cydr-content="Title"></span> [<span cydr-content="Category"></span>]
-        <select cydr-value="Category" cydr-options="Up().Categories()" cydr-optiontext="Title" cydr-optionvalue="Title"  ></select>
-      </li>
+  </div>
 
+
+  <h3>Competed Todos</h3>
+  <ul cydr-loop="CompetedTodos">
+    <li><span cydr-content="Title"></span></li>
   </ul>
 
+  <div style="clear:both;">&nbsp;</div>
 
 
 </div>  

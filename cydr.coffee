@@ -1,4 +1,4 @@
-window.l = (msg, msg2) ->
+window.fff = (msg, msg2) ->
 	if msg2 then console.log msg, msg2 else console.log msg
 
 
@@ -8,60 +8,67 @@ class window.Cydr
 
 	@_collectionBindings = []
 
-	@_analyzedFunctions = []
+	@_analyzedExpressions = []
 
 	@_analysisData = {}
 
 	@_functionDependencies = []
 
-	registerModelBinding: (model, binding) ->
-		Cydr._modelBindings[model.getClass()] = [] if not Cydr._modelBindings[model.getClass()]
-		Cydr._modelBindings[model.getClass()].push binding		
+	@_cachedExpressions = []
+
+	@_events: []
+
+	registerModelBinding: (model, binding) ->		
+		Cydr._modelBindings[model.getID()] = [] if not Cydr._modelBindings[model.getID()]
+		Cydr._modelBindings[model.getID()][binding.id] = binding
 
 	getModelBindings: (model) ->
 		Cydr._modelBindings[model]
 
-	registerCollectionBinding: (collection, binding) ->				
-		Cydr._collectionBindings[collection] = [] if not Cydr._collectionBindings[collection]
-		Cydr._collectionBindings[collection].push binding
 
-	getCollectionBindings: (collection = null) ->
-		if collection then Cydr._collectionBindings[collection] else Cydr._collectionBindings
+	isAnalyzedExpression: (model, exp) ->
+		Cydr._analyzedExpressions[model]?[exp]
 
-	isAnalyzedFunction: (model, func) ->
-		funcs = Cydr._analyzedFunctions[model] or []
-		for f in funcs
-			return true if f is func
-		false
-
-	registerAnalyzedFunction: (model, func) ->
-		Cydr._analyzedFunctions[model] = [] if not Cydr._analyzedFunctions[model]
-		Cydr._analyzedFunctions[model].push func
 
 	registerFunctionDependency: (model, prop) ->
-		Cydr._functionDependencies[model] = [] if not Cydr._functionDependencies[model]
-		Cydr._functionDependencies[model][prop] = [] if not Cydr._functionDependencies[model][prop]
-		Cydr._functionDependencies[model][prop].push Cydr._analysisData.model, Cydr._analysisData.func
+		Cydr._functionDependencies.push "#{model.getClass()}:#{prop}:#{model.getID()}"
+		console.log "#{Cydr._analysisData.model}.#{Cydr._analysisData.expression} depends on #{model.getClass()}##{model.getID()}.#{prop}"
 
-	getDependentFunctions: (model, prop) -> Cydr._functionDependencies[model][prop] or []
+	getDependentFunctions: (model, exp) -> Cydr._functionDependencies[model][exp] or []
 
 	isAnalyzing: -> 
-		Cydr._analysisData.model
+		if Cydr._analysisData.model then true else false
 
-	beginAnalysis: (model, func) ->
+	beginAnalysis: (model, exp) ->
+		Cydr._analyzedExpressions[model] = [] if not Cydr._analyzedExpressions[model]
 		Cydr._analysisData =
 			model: model
-			func: func		
+			expression: exp		
 
 	endAnalysis: ->
-		Cydr._analysisData = {}
-
-	reset: ->
-		Cydr._modelBindings = []
-		Cydr._collectionBindings = []
-		Cydr._analyzedFunctions = []
+		m = Cydr._analysisData.model
+		e = Cydr._analysisData.expression
+		Cydr._analyzedExpressions[m][e] = Cydr._functionDependencies
 		Cydr._analysisData = {}
 		Cydr._functionDependencies = []
+
+	getDependenciesForExpression: (model, exp) ->
+		if Cydr._analyzedExpressions[model]
+			return Cydr._analyzedExpressions[model][exp]	
+		false
+
+
+	fireEvent: (sku) ->
+		subscribers = (Cydr._events[sku]) or []
+		i = 0
+		for id, func of subscribers
+			i++
+			func()
+	
+
+	subscribeToEvent: (sku, listener, func) ->		
+		Cydr._events[sku] = [] if not Cydr._events[sku]
+		Cydr._events[sku]["listener_#{listener.__ID__}"] = func.bind(listener)
 
 
 
@@ -71,8 +78,13 @@ class Cydr.Object
 
 	@_instanceCount: 0
 
+	@_instances: []
+
+	__ID__: null
+
 	constructor: ->
 		Cydr.Object._instanceCount++
+		@__ID__ = Cydr.Object._instanceCount
 
 	getClass: ->
 		@constructor.name
@@ -94,32 +106,54 @@ class Cydr.Binding extends Cydr.Object
 	allowedTags: []
 
 
+
 	constructor: (model, element) ->
 		super()
 		@element = element
 		@model = model
 		attValue = @element.getAttribute @getBindingAttribute()
-		@bindingExec = attValue		
+		@bindingExec = attValue
+
 
 
 	init: ->
 		if @allowedTags.length and @element.tagName not in @allowedTags
 			alert "#{@getBindingAttribute()} binding must be on one of the following tags: #{@allowedTags.join ','}."		
 		if @exportValueEvent			
-			@element.addEventListener @exportValueEvent, =>
+			@element.addEventListener @exportValueEvent, =>				
 				@exportValue()
-
-		Cydr::registerModelBinding @model, @
-		@importValue()
+		@element.setAttribute "title", "ID: #{@model.getID()}"
+		@subscribe()
+		@importValue()	
 
 
 	importValue: ->
 
 	exportValue: ->
 
+	subscribe: ->		
+		if @model.hasProp(@bindingExec) or @model.hasCollection(@bindingExec)
+			evt = "ModelUpdated:#{@model.getClass()}:#{@bindingExec}:#{@model.getID()}"
+			t = (@element.getAttribute "title") or ""
+			@element.setAttribute "title", "#{t}//#{evt}"
+			Cydr::subscribeToEvent evt, @, ->					
+				@importValue()
 
-	createImportFunction: ->		
-		@importFunction = new Function "scope", "with(scope) {return #{@bindingExec}; }"		
+		else if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec			
+			Cydr::beginAnalysis @model.getClass(), @bindingExec			
+			@model.exec @bindingExec
+			Cydr::endAnalysis()
+		
+		result = @model.getExpresssionDependencies @bindingExec
+		if result
+			for dependency in result				
+				parts = dependency.split ":"								
+				evt = "ModelUpdated:#{parts[0]}:#{parts[1]}:#{parts[2]}"
+				t = (@element.getAttribute "title") or ""
+				@element.setAttribute "title", "#{t}//#{evt}"
+				Cydr::subscribeToEvent evt, @, ->					
+					@importValue()
+
 
 	getBindingAttribute: ->
 		klass = @constructor.name.replace /Binding$/, ''		
@@ -130,7 +164,7 @@ class Cydr.Binding extends Cydr.Object
 		new Cydr[@getClass()] model, element
 
 
-	getValue: ->		
+	getValue: ->	
 		@model.exec @bindingExec
 
 	getController: ->
@@ -144,7 +178,7 @@ class Cydr.Binding extends Cydr.Object
 
 class Cydr.ContentBinding extends Cydr.Binding
 
-	importValue: ->		
+	importValue: ->			
 		@element.innerHTML = @getValue()
 
 class Cydr.SubmitBinding extends Cydr.Binding
@@ -182,7 +216,10 @@ class Cydr.ValueBinding extends Cydr.Binding
 		if @element.tagName is "INPUT"
 			@model.set @bindingExec, @element.value
 		else if @element.tagName is "SELECT"
-			@model.set @bindingExec, @element.options[@element.selectedIndex].getAttribute "value"
+
+			val = @element.options[@element.selectedIndex]?.getAttribute "value"
+			val ?= ""			
+			@model.set @bindingExec, val
 
 
 
@@ -192,33 +229,57 @@ class Cydr.CheckedBinding extends Cydr.Binding
 
 	exportValueEvent: "change"
 
-	importValue: ->			
-		if not @getValue().isFalsy() then @element.setAttribute "checked", "checked" else @element.removeAttribute "checked"
+	importValue: ->	
+		v = @getValue()		
+		if (v?.isDataType) and (not v.isFalsy())
+			@element.setAttribute "checked", "checked" 
+		else
+			@element.removeAttribute "checked"
+		
+
 
 	exportValue: ->
 		@model.set @bindingExec, @element.checked
 
-class Cydr.ExtraclassesBinding extends Cydr.Binding
 
-	importValue: ->	
-		obj = @model.exec(@bindingExec)
-		if typeof obj isnt "object"
-			console.error "Extraclasses binding must return a JSON object of classname: property/function pairs."					
-		for cssClass, exec of obj
+class Cydr.JSONBinding extends Cydr.Binding
+
+	subscribe: ->
+		if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec
+			Cydr::beginAnalysis @model.getClass(), @bindingExec			
+			obj = @model.exec @bindingExec			
+			if typeof obj isnt "object"			
+				console.error "#{@getClass()} binding must return a JSON object of classname: property/function pairs."
+				return
+			for className, prop of obj
+				if typeof prop is "function" then prop() else @model.exec prop
+			Cydr::endAnalysis()			
+		result = @model.getExpresssionDependencies @bindingExec
+		if result
+			for dependency in result				
+				parts = dependency.split ":"				
+				Cydr::subscribeToEvent "ModelUpdated:#{@model.getClass()}:#{parts[1]}:#{@model.getID()}", @, ->					
+					@importValue()		
+
+class Cydr.ExtraclassesBinding extends Cydr.JSONBinding
+
+	importValue: ->			
+		for cssClass, exec of @model.exec @bindingExec
 			rx = new RegExp "(^|\\s)#{cssClass}", "g"
 			newClass = @element.className.replace rx, ""			
 			if typeof exec is "function"				
 				result = exec()				
+				if not result?.isDataType then return
 				unless result.isFalsy()
 					@element.className += if @element.className.length then " #{cssClass}" else cssClass
 				else
 					@element.className = newClass
 
-class Cydr.AttrBinding extends Cydr.Binding
+class Cydr.AttrBinding extends Cydr.JSONBinding
 
 	importValue: ->
 		if typeof @getValue() isnt "object"
-			console.error "Extraclasses binding must return a JSON object of classname: property/function pairs."			
+			console.error "#{@getClass()} binding must return a JSON object of attribute-name: property/function pairs."			
 		for attribute, exec of @getValue()
 			if typeof exec is "function"
 				@element.setAttribute attribute, exec()
@@ -247,14 +308,17 @@ class Cydr.LoopBinding extends Cydr.Binding
 
 	template: null
 
-	nodes: []
+	constructor: (model, element) ->
+		@nodes = []
+		@modelNodeMap = []
+		super model, element
 
-	init: ->		
+	init: ->
 		@loadTemplate() if @nodes.length is 0
 		super()
 
 	loadTemplate: ->		
-		for n in @element.getElementsByTagName "*"			
+		for n in @element.getElementsByTagName "*"				
 			n.setAttribute? "cydr-ignore", "true"			
 		nodes = @element.innerHTML
 		dummy = document.createElement "div"
@@ -275,15 +339,22 @@ class Cydr.LoopBinding extends Cydr.Binding
 		while @element.hasChildNodes()			
 			@element.removeChild @element.lastChild			
 
-	importValue: ->
-		@clearContents()
-		list = @model.obj @bindingExec		
-		for model, i in list.getItems()							
-			for node in @nodes				
-				n = node.cloneNode true
-				@element.appendChild n
-				n.removeAttribute? "cydr-ignore"				
-				model.applyBindingsToNode n
+	importValue: ->		
+		@clearContents()		
+		list = @model.exec @bindingExec
+		for model, i in list.getItems()	
+			cachedNodes = @modelNodeMap[model.getID()]
+			if cachedNodes
+				for node in cachedNodes					
+					@element.appendChild node
+			else
+				@modelNodeMap[model.getID()] = []
+				for node in @nodes				
+					n = node.cloneNode true
+					@element.appendChild n
+					n.removeAttribute? "cydr-ignore"					
+					model.applyBindingsToNode n
+					@modelNodeMap[model.getID()].push n
 
 
 class Cydr.OptionsBinding extends Cydr.LoopBinding
@@ -309,7 +380,7 @@ class Cydr.OptionsBinding extends Cydr.LoopBinding
 		if v
 			@element.removeAttribute "cydr-value"
 			@element.setAttribute "cydr-value", v
-		Cydr::registerModelBinding @model, @
+		@subscribe()
 		@importValue()
 
 	importValue: ->
@@ -337,6 +408,8 @@ class Cydr.DataType extends Cydr.Object
 	_value: ""
 
 	@isDataType: true
+
+	isDataType: true
 
 	constructor: (val = "") ->
 		super()		
@@ -403,13 +476,17 @@ class Cydr.Model extends Cydr.Object
 
 	@isModel: true
 
+	isModel: true
+
+	collection: null
+
 
 	stat: (prop) ->		
 		Cydr[@getClass()][prop]
 
 
 
-	constructor: (data) ->
+	constructor: (data) ->	
 		super()		
 		@_mutatedProperties = {}
 		@_mutatedCollections = {}		
@@ -425,48 +502,65 @@ class Cydr.Model extends Cydr.Object
 				throw new Error "Model '#{type}' does not exist!"
 				break			
 			@_mutatedCollections[name] = new Cydr.Collection @, type, name
-			f = new Function "return this._mutatedCollections['#{name}'].getList();"
+			f = new Function "return this.get('#{name}');"
 			@[name] = f.bind @
 		for prop, val of @defaults			
 			@_mutatedProperties[prop].setValue val if @hasProp prop
-		for prop, val of data	
+		for prop, val of data			
 			@_mutatedProperties[prop].setValue val if @hasProp prop
 		@_mutatedProperties["__id__"] = Cydr.Object._instanceCount
 		@_mutatedProperties["__destroyed__"] = false				
 
 	set: (prop, value) ->		
-		@_mutatedProperties[prop].setValue value
-		@notify()
+		@_mutatedProperties[prop].setValue value		
+		@notify(prop) if not Cydr::isAnalyzing()
 
 
 	obj: (prop) ->
+		if Cydr::isAnalyzing()			
+			Cydr::registerFunctionDependency @, prop		
 		if (not @hasProp prop) and (not @hasCollection prop) and (typeof @[prop] is "function")
-			return @castFunction prop		
+			return @[prop]()		
 		@_mutatedProperties[prop] or @_mutatedCollections[prop]
 
 
 	exec: (exp) ->
-		if typeof @[exp] is "function"
-			return @[exp].call @
-		if not @expressions[exp]			
-			@expressions[exp] = new Function "scope", "with(scope) {return #{exp};}"
-		result = @expressions[exp](@)
-		if typeof result is "function"
-			result.apply @, [@]
-		result
+		ret = (@_mutatedProperties[exp]) or (@_mutatedCollections[exp]?.getList())
+		return ret if ret
+		
+		if @[exp]
+			return @[exp]()
+		if @getCachedExpression exp
+			func = @getCachedExpression exp
+			try				
+				result = func(@)				
+			catch e
+				console.log "Could not run expression '#{func.toString()}' on #{@getClass()}"
+				console.log e.message
+				return new Cydr.DataType ""
+			result
 
 
+	getCachedExpression: (exp) ->
+		if not Cydr._cachedExpressions[@getClass()]
+			Cydr._cachedExpressions[@getClass()] = []
+		if not Cydr._cachedExpressions[@getClass()][exp]
+			body = "with(scope) { return #{exp}; }"			
+			Cydr._cachedExpressions[@getClass()][exp] = new Function "scope", body
 
-	get: (prop) ->		
-		if (not @hasProp prop) and (not @hasCollection prop) and (typeof @[prop] is "function")			
-			return @castFunction prop
-		else			
-			if Cydr::isAnalyzing()
-				Cydr::registerFunctionDependency @getClass(), prop
-			if @_mutatedProperties[prop]
-				return @_mutatedProperties[prop].getValue()
-			else if @_mutatedCollections[prop]			
-				return @_mutatedCollections[prop].getList()
+		Cydr._cachedExpressions[@getClass()][exp]
+	
+
+	getExpresssionDependencies: (exp) ->
+		Cydr::getDependenciesForExpression @getClass(), exp
+
+	get: (prop) ->
+		if Cydr::isAnalyzing()			
+			Cydr::registerFunctionDependency @, prop
+		if @_mutatedProperties[prop]
+			return @_mutatedProperties[prop].getValue()
+		else if @_mutatedCollections[prop]				
+			return @_mutatedCollections[prop].getList()
 
 
 	castFunction: (func) ->
@@ -527,20 +621,18 @@ class Cydr.Model extends Cydr.Object
 						@bindToElement el
 						break
 
+	getBindings: ->
+		Cydr._modelBindings[@getID()]
 
-	notify: ->		
-		bindings = (Cydr::getModelBindings @getClass() or [])		
-		for binding in bindings					
-			binding.importValue()
+	notify: (prop) ->		
+		Cydr::fireEvent "ModelUpdated:#{@getClass()}:#{prop}:#{@getID()}"
+		@collection.notify() if @collection
 
-
+	setCollection: (collection) ->
+		@collection = collection
 
 
 class Cydr.Collection extends Cydr.Object
-
-	_list: []
-
-	_nodes: []
 
 	owner: null
 
@@ -548,28 +640,25 @@ class Cydr.Collection extends Cydr.Object
 
 	name: null
 
-	constructor: (@owner, @model, @name, list) ->
-		super()
-		list = [] if not list
-		if list.isDataList
-			@_list = list
-		else			
-			@_list = new Cydr.DataList list
-		@_list.setCollection @
+	constructor: (@owner, @model, @name) ->
+		super()		
+		@_list = @createDataList()
 
 	count: ->
 		@_list.getItems().length
 
-
-	push: (data) ->
-		@_list.addItem data		
-		@owner.notify()
 
 	getItems: ->
 		@_list.getItems()
 
 	getList: ->
 		@_list
+
+	notify: ->
+		@owner.notify @name
+
+	createDataList: (items = []) ->
+		new Cydr.DataList @, items
 
 
 
@@ -582,32 +671,34 @@ class Cydr.DataList extends Cydr.Object
 
 	collection: null
 
-	_items = []
-
-
-	constructor: (items) ->
+	constructor: (collection, items = []) ->
 		super()
-		@_items = items
-
-
-	setCollection: (collection) ->
+		@_items = []
 		@collection = collection
+		@pushMany items		
+
 
 
 	getItems: ->
 		@_items
 
 	push: (model) ->
+		model.setCollection @collection
 		@_items.push model
-		@collection.owner.notify()
+		@collection.owner.notify @collection.name
 
-	filter: (filter, value) ->
+
+	pushMany: (items) ->
+		@push i for i in (items or [])
+		@collection.owner.notify @collection.name
+
+	filter: (filter, value) ->		
 		[field, operator] = filter.split ":"
 		operator = "EqualTo" if not operator
 		result = []
 		switch operator
-			when "EqualTo" then result.push i for i in items when i.get field is value		
-		new DataList result
+			when "EqualTo" then result.push i for i in @_items when i.get(field) is value
+		@collection.createDataList result
 
 
 	isFalsy: -> @_items.length is 0
@@ -628,4 +719,5 @@ class Cydr.Controller extends Cydr.Model
 			@applyBindingsToNode node				
 
 
-
+# Cuz68a32
+# 1074329

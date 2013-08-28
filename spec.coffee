@@ -4,6 +4,7 @@ class @TestApp extends Cydr.Controller
 		FirstName: "Text"
 		LastName: "Text"
 		IsMember: "Boolean"
+		CategoryFilter: "Text"
 
 	has_many:
 		Todos: "Todo"
@@ -26,10 +27,12 @@ class @TestApp extends Cydr.Controller
 
 	FilteredTodos: ->
 		if @get("CategoryFilter").length
-			console.log "got a filter"
-			return @get("Todos").filter "Category", @get "CategoryFilter"
-		@get "Todos"
+			result = @get("Todos").filter "Category", @get "CategoryFilter"
+			return result
+		@Todos()
 
+	CompetedTodos: ->
+		@Todos().filter "IsDone", true
 
 class @Todo extends Cydr.Model
 
@@ -54,9 +57,14 @@ class @Category extends Cydr.Model
 		Title: "Text"
 
 $ ->
-	loadFixtures "spec.html"
+	#loadFixtures "spec.html"
 	window.App = new TestApp "#spec"
-
+###
+	App.get("Todos").push(new Todo({Title: "Shitty", Category: "One"}));
+	App.get("Todos").push(new Todo({Title: "Shafty", Category: "Two"}));
+	App.get("Categories").push(new Category({Title: "One"}))
+	App.get("Categories").push(new Category({Title: "Two"}))
+###
 describe "Unit tests", ->
 
 	it "Sets properties", ->
@@ -87,7 +95,6 @@ describe "Unit tests", ->
 	it "Allows custom getters", ->
 		App.set "FirstName", "Joe"
 		expect(App.FullName()).toEqual "Joe Macho"
-
 
 describe "Integration tests", ->
 
@@ -121,7 +128,6 @@ describe "Integration tests", ->
 			expect($('#extraclass').hasClass("ismember")).toBeTruthy()
 			App.set "IsMember", false
 			expect($('#extraclass').hasClass("ismember")).toBeFalsy()
-
 		it "Has an attribute binding", ->
 			App.set "FirstName", "Paul"
 			expect($('#attribute').attr("href")).toEqual "Paul"
@@ -147,7 +153,7 @@ describe "Integration tests", ->
 		it "Has an options binding", ->
 			App.get("Categories").push(new Category({Title: "One"}));
 			App.get("Categories").push(new Category({Title: "Two"}));
-
+			expect($('#optionsbinding option')).toHaveLength 2
 		describe "Loops", ->
 
 			it "Will loop through a collection", ->
@@ -175,7 +181,10 @@ describe "Integration tests", ->
 				expect($('#fullname').text()).toEqual "Andrew Hore"
 
 			it "Can count collections", ->
-				l " ********************************************************************************* "						
 				App.get("Todos").push(new Todo({Title: "Todo6", IsDone: false, Category: "Two"}))
 				expect($('#todocount').text()).toEqual "6"
+
+				console.log Cydr.Object._instances
+
+
 

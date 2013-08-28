@@ -14,7 +14,8 @@
     TestApp.prototype.properties = {
       FirstName: "Text",
       LastName: "Text",
-      IsMember: "Boolean"
+      IsMember: "Boolean",
+      CategoryFilter: "Text"
     };
 
     TestApp.prototype.has_many = {
@@ -40,11 +41,16 @@
     };
 
     TestApp.prototype.FilteredTodos = function() {
+      var result;
       if (this.get("CategoryFilter").length) {
-        console.log("got a filter");
-        return this.get("Todos").filter("Category", this.get("CategoryFilter"));
+        result = this.get("Todos").filter("Category", this.get("CategoryFilter"));
+        return result;
       }
-      return this.get("Todos");
+      return this.Todos();
+    };
+
+    TestApp.prototype.CompetedTodos = function() {
+      return this.Todos().filter("IsDone", true);
     };
 
     return TestApp;
@@ -102,9 +108,16 @@
   })(Cydr.Model);
 
   $(function() {
-    loadFixtures("spec.html");
     return window.App = new TestApp("#spec");
   });
+
+  /*
+  	App.get("Todos").push(new Todo({Title: "Shitty", Category: "One"}));
+  	App.get("Todos").push(new Todo({Title: "Shafty", Category: "Two"}));
+  	App.get("Categories").push(new Category({Title: "One"}))
+  	App.get("Categories").push(new Category({Title: "Two"}))
+  */
+
 
   describe("Unit tests", function() {
     it("Sets properties", function() {
@@ -203,9 +216,10 @@
         App.get("Categories").push(new Category({
           Title: "One"
         }));
-        return App.get("Categories").push(new Category({
+        App.get("Categories").push(new Category({
           Title: "Two"
         }));
+        return expect($('#optionsbinding option')).toHaveLength(2);
       });
       describe("Loops", function() {
         it("Will loop through a collection", function() {
@@ -249,13 +263,13 @@
           return expect($('#fullname').text()).toEqual("Andrew Hore");
         });
         return it("Can count collections", function() {
-          l(" ********************************************************************************* ");
           App.get("Todos").push(new Todo({
             Title: "Todo6",
             IsDone: false,
             Category: "Two"
           }));
-          return expect($('#todocount').text()).toEqual("6");
+          expect($('#todocount').text()).toEqual("6");
+          return console.log(Cydr.Object._instances);
         });
       });
     });

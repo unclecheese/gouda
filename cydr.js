@@ -4,7 +4,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  window.l = function(msg, msg2) {
+  window.fff = function(msg, msg2) {
     if (msg2) {
       return console.log(msg, msg2);
     } else {
@@ -20,95 +20,93 @@
 
     Cydr._collectionBindings = [];
 
-    Cydr._analyzedFunctions = [];
+    Cydr._analyzedExpressions = [];
 
     Cydr._analysisData = {};
 
     Cydr._functionDependencies = [];
 
+    Cydr._cachedExpressions = [];
+
+    Cydr._events = [];
+
     Cydr.prototype.registerModelBinding = function(model, binding) {
-      if (!Cydr._modelBindings[model.getClass()]) {
-        Cydr._modelBindings[model.getClass()] = [];
+      if (!Cydr._modelBindings[model.getID()]) {
+        Cydr._modelBindings[model.getID()] = [];
       }
-      return Cydr._modelBindings[model.getClass()].push(binding);
+      return Cydr._modelBindings[model.getID()][binding.id] = binding;
     };
 
     Cydr.prototype.getModelBindings = function(model) {
       return Cydr._modelBindings[model];
     };
 
-    Cydr.prototype.registerCollectionBinding = function(collection, binding) {
-      if (!Cydr._collectionBindings[collection]) {
-        Cydr._collectionBindings[collection] = [];
-      }
-      return Cydr._collectionBindings[collection].push(binding);
-    };
-
-    Cydr.prototype.getCollectionBindings = function(collection) {
-      if (collection == null) {
-        collection = null;
-      }
-      if (collection) {
-        return Cydr._collectionBindings[collection];
-      } else {
-        return Cydr._collectionBindings;
-      }
-    };
-
-    Cydr.prototype.isAnalyzedFunction = function(model, func) {
-      var f, funcs, _i, _len;
-      funcs = Cydr._analyzedFunctions[model] || [];
-      for (_i = 0, _len = funcs.length; _i < _len; _i++) {
-        f = funcs[_i];
-        if (f === func) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    Cydr.prototype.registerAnalyzedFunction = function(model, func) {
-      if (!Cydr._analyzedFunctions[model]) {
-        Cydr._analyzedFunctions[model] = [];
-      }
-      return Cydr._analyzedFunctions[model].push(func);
+    Cydr.prototype.isAnalyzedExpression = function(model, exp) {
+      var _ref;
+      return (_ref = Cydr._analyzedExpressions[model]) != null ? _ref[exp] : void 0;
     };
 
     Cydr.prototype.registerFunctionDependency = function(model, prop) {
-      if (!Cydr._functionDependencies[model]) {
-        Cydr._functionDependencies[model] = [];
-      }
-      if (!Cydr._functionDependencies[model][prop]) {
-        Cydr._functionDependencies[model][prop] = [];
-      }
-      return Cydr._functionDependencies[model][prop].push(Cydr._analysisData.model, Cydr._analysisData.func);
+      Cydr._functionDependencies.push("" + (model.getClass()) + ":" + prop + ":" + (model.getID()));
+      return console.log("" + Cydr._analysisData.model + "." + Cydr._analysisData.expression + " depends on " + (model.getClass()) + "#" + (model.getID()) + "." + prop);
     };
 
-    Cydr.prototype.getDependentFunctions = function(model, prop) {
-      return Cydr._functionDependencies[model][prop] || [];
+    Cydr.prototype.getDependentFunctions = function(model, exp) {
+      return Cydr._functionDependencies[model][exp] || [];
     };
 
     Cydr.prototype.isAnalyzing = function() {
-      return Cydr._analysisData.model;
+      if (Cydr._analysisData.model) {
+        return true;
+      } else {
+        return false;
+      }
     };
 
-    Cydr.prototype.beginAnalysis = function(model, func) {
+    Cydr.prototype.beginAnalysis = function(model, exp) {
+      if (!Cydr._analyzedExpressions[model]) {
+        Cydr._analyzedExpressions[model] = [];
+      }
       return Cydr._analysisData = {
         model: model,
-        func: func
+        expression: exp
       };
     };
 
     Cydr.prototype.endAnalysis = function() {
-      return Cydr._analysisData = {};
-    };
-
-    Cydr.prototype.reset = function() {
-      Cydr._modelBindings = [];
-      Cydr._collectionBindings = [];
-      Cydr._analyzedFunctions = [];
+      var e, m;
+      m = Cydr._analysisData.model;
+      e = Cydr._analysisData.expression;
+      Cydr._analyzedExpressions[m][e] = Cydr._functionDependencies;
       Cydr._analysisData = {};
       return Cydr._functionDependencies = [];
+    };
+
+    Cydr.prototype.getDependenciesForExpression = function(model, exp) {
+      if (Cydr._analyzedExpressions[model]) {
+        return Cydr._analyzedExpressions[model][exp];
+      }
+      return false;
+    };
+
+    Cydr.prototype.fireEvent = function(sku) {
+      var func, i, id, subscribers, _results;
+      subscribers = Cydr._events[sku] || [];
+      i = 0;
+      _results = [];
+      for (id in subscribers) {
+        func = subscribers[id];
+        i++;
+        _results.push(func());
+      }
+      return _results;
+    };
+
+    Cydr.prototype.subscribeToEvent = function(sku, listener, func) {
+      if (!Cydr._events[sku]) {
+        Cydr._events[sku] = [];
+      }
+      return Cydr._events[sku]["listener_" + listener.__ID__] = func.bind(listener);
     };
 
     return Cydr;
@@ -119,8 +117,13 @@
 
     Object._instanceCount = 0;
 
+    Object._instances = [];
+
+    Object.prototype.__ID__ = null;
+
     function Object() {
       Cydr.Object._instanceCount++;
+      this.__ID__ = Cydr.Object._instanceCount;
     }
 
     Object.prototype.getClass = function() {
@@ -169,7 +172,8 @@
           return _this.exportValue();
         });
       }
-      Cydr.prototype.registerModelBinding(this.model, this);
+      this.element.setAttribute("title", "ID: " + (this.model.getID()));
+      this.subscribe();
       return this.importValue();
     };
 
@@ -177,8 +181,35 @@
 
     Binding.prototype.exportValue = function() {};
 
-    Binding.prototype.createImportFunction = function() {
-      return this.importFunction = new Function("scope", "with(scope) {return " + this.bindingExec + "; }");
+    Binding.prototype.subscribe = function() {
+      var dependency, evt, parts, result, t, _i, _len, _results;
+      if (this.model.hasProp(this.bindingExec) || this.model.hasCollection(this.bindingExec)) {
+        evt = "ModelUpdated:" + (this.model.getClass()) + ":" + this.bindingExec + ":" + (this.model.getID());
+        t = (this.element.getAttribute("title")) || "";
+        this.element.setAttribute("title", "" + t + "//" + evt);
+        Cydr.prototype.subscribeToEvent(evt, this, function() {
+          return this.importValue();
+        });
+      } else if (!Cydr.prototype.isAnalyzedExpression(this.model.getClass(), this.bindingExec)) {
+        Cydr.prototype.beginAnalysis(this.model.getClass(), this.bindingExec);
+        this.model.exec(this.bindingExec);
+        Cydr.prototype.endAnalysis();
+      }
+      result = this.model.getExpresssionDependencies(this.bindingExec);
+      if (result) {
+        _results = [];
+        for (_i = 0, _len = result.length; _i < _len; _i++) {
+          dependency = result[_i];
+          parts = dependency.split(":");
+          evt = "ModelUpdated:" + parts[0] + ":" + parts[1] + ":" + parts[2];
+          t = (this.element.getAttribute("title")) || "";
+          this.element.setAttribute("title", "" + t + "//" + evt);
+          _results.push(Cydr.prototype.subscribeToEvent(evt, this, function() {
+            return this.importValue();
+          }));
+        }
+        return _results;
+      }
     };
 
     Binding.prototype.getBindingAttribute = function() {
@@ -287,10 +318,15 @@
     };
 
     ValueBinding.prototype.exportValue = function() {
+      var val, _ref;
       if (this.element.tagName === "INPUT") {
         return this.model.set(this.bindingExec, this.element.value);
       } else if (this.element.tagName === "SELECT") {
-        return this.model.set(this.bindingExec, this.element.options[this.element.selectedIndex].getAttribute("value"));
+        val = (_ref = this.element.options[this.element.selectedIndex]) != null ? _ref.getAttribute("value") : void 0;
+        if (val == null) {
+          val = "";
+        }
+        return this.model.set(this.bindingExec, val);
       }
     };
 
@@ -311,7 +347,9 @@
     CheckedBinding.prototype.exportValueEvent = "change";
 
     CheckedBinding.prototype.importValue = function() {
-      if (!this.getValue().isFalsy()) {
+      var v;
+      v = this.getValue();
+      if ((v != null ? v.isDataType : void 0) && (!v.isFalsy())) {
         return this.element.setAttribute("checked", "checked");
       } else {
         return this.element.removeAttribute("checked");
@@ -326,6 +364,51 @@
 
   })(Cydr.Binding);
 
+  Cydr.JSONBinding = (function(_super) {
+
+    __extends(JSONBinding, _super);
+
+    function JSONBinding() {
+      return JSONBinding.__super__.constructor.apply(this, arguments);
+    }
+
+    JSONBinding.prototype.subscribe = function() {
+      var className, dependency, obj, parts, prop, result, _i, _len, _results;
+      if (!Cydr.prototype.isAnalyzedExpression(this.model.getClass(), this.bindingExec)) {
+        Cydr.prototype.beginAnalysis(this.model.getClass(), this.bindingExec);
+        obj = this.model.exec(this.bindingExec);
+        if (typeof obj !== "object") {
+          console.error("" + (this.getClass()) + " binding must return a JSON object of classname: property/function pairs.");
+          return;
+        }
+        for (className in obj) {
+          prop = obj[className];
+          if (typeof prop === "function") {
+            prop();
+          } else {
+            this.model.exec(prop);
+          }
+        }
+        Cydr.prototype.endAnalysis();
+      }
+      result = this.model.getExpresssionDependencies(this.bindingExec);
+      if (result) {
+        _results = [];
+        for (_i = 0, _len = result.length; _i < _len; _i++) {
+          dependency = result[_i];
+          parts = dependency.split(":");
+          _results.push(Cydr.prototype.subscribeToEvent("ModelUpdated:" + (this.model.getClass()) + ":" + parts[1] + ":" + (this.model.getID()), this, function() {
+            return this.importValue();
+          }));
+        }
+        return _results;
+      }
+    };
+
+    return JSONBinding;
+
+  })(Cydr.Binding);
+
   Cydr.ExtraclassesBinding = (function(_super) {
 
     __extends(ExtraclassesBinding, _super);
@@ -335,33 +418,29 @@
     }
 
     ExtraclassesBinding.prototype.importValue = function() {
-      var cssClass, exec, newClass, obj, result, rx, _results;
-      obj = this.model.exec(this.bindingExec);
-      if (typeof obj !== "object") {
-        console.error("Extraclasses binding must return a JSON object of classname: property/function pairs.");
-      }
-      _results = [];
-      for (cssClass in obj) {
-        exec = obj[cssClass];
+      var cssClass, exec, newClass, result, rx, _ref;
+      _ref = this.model.exec(this.bindingExec);
+      for (cssClass in _ref) {
+        exec = _ref[cssClass];
         rx = new RegExp("(^|\\s)" + cssClass, "g");
         newClass = this.element.className.replace(rx, "");
         if (typeof exec === "function") {
           result = exec();
-          if (!result.isFalsy()) {
-            _results.push(this.element.className += this.element.className.length ? " " + cssClass : cssClass);
-          } else {
-            _results.push(this.element.className = newClass);
+          if (!(result != null ? result.isDataType : void 0)) {
+            return;
           }
-        } else {
-          _results.push(void 0);
+          if (!result.isFalsy()) {
+            this.element.className += this.element.className.length ? " " + cssClass : cssClass;
+          } else {
+            this.element.className = newClass;
+          }
         }
       }
-      return _results;
     };
 
     return ExtraclassesBinding;
 
-  })(Cydr.Binding);
+  })(Cydr.JSONBinding);
 
   Cydr.AttrBinding = (function(_super) {
 
@@ -374,7 +453,7 @@
     AttrBinding.prototype.importValue = function() {
       var attribute, exec, _ref, _results;
       if (typeof this.getValue() !== "object") {
-        console.error("Extraclasses binding must return a JSON object of classname: property/function pairs.");
+        console.error("" + (this.getClass()) + " binding must return a JSON object of attribute-name: property/function pairs.");
       }
       _ref = this.getValue();
       _results = [];
@@ -391,7 +470,7 @@
 
     return AttrBinding;
 
-  })(Cydr.Binding);
+  })(Cydr.JSONBinding);
 
   Cydr.VisibleBinding = (function(_super) {
 
@@ -458,13 +537,13 @@
 
     __extends(LoopBinding, _super);
 
-    function LoopBinding() {
-      return LoopBinding.__super__.constructor.apply(this, arguments);
-    }
-
     LoopBinding.prototype.template = null;
 
-    LoopBinding.prototype.nodes = [];
+    function LoopBinding(model, element) {
+      this.nodes = [];
+      this.modelNodeMap = [];
+      LoopBinding.__super__.constructor.call(this, model, element);
+    }
 
     LoopBinding.prototype.init = function() {
       if (this.nodes.length === 0) {
@@ -521,28 +600,43 @@
     };
 
     LoopBinding.prototype.importValue = function() {
-      var i, list, model, n, node, _i, _len, _ref, _results;
+      var cachedNodes, i, list, model, n, node, _i, _len, _ref, _results;
       this.clearContents();
-      list = this.model.obj(this.bindingExec);
+      list = this.model.exec(this.bindingExec);
       _ref = list.getItems();
       _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         model = _ref[i];
-        _results.push((function() {
-          var _j, _len1, _ref1, _results1;
-          _ref1 = this.nodes;
-          _results1 = [];
-          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-            node = _ref1[_j];
-            n = node.cloneNode(true);
-            this.element.appendChild(n);
-            if (typeof n.removeAttribute === "function") {
-              n.removeAttribute("cydr-ignore");
+        cachedNodes = this.modelNodeMap[model.getID()];
+        if (cachedNodes) {
+          _results.push((function() {
+            var _j, _len1, _results1;
+            _results1 = [];
+            for (_j = 0, _len1 = cachedNodes.length; _j < _len1; _j++) {
+              node = cachedNodes[_j];
+              _results1.push(this.element.appendChild(node));
             }
-            _results1.push(model.applyBindingsToNode(n));
-          }
-          return _results1;
-        }).call(this));
+            return _results1;
+          }).call(this));
+        } else {
+          this.modelNodeMap[model.getID()] = [];
+          _results.push((function() {
+            var _j, _len1, _ref1, _results1;
+            _ref1 = this.nodes;
+            _results1 = [];
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              node = _ref1[_j];
+              n = node.cloneNode(true);
+              this.element.appendChild(n);
+              if (typeof n.removeAttribute === "function") {
+                n.removeAttribute("cydr-ignore");
+              }
+              model.applyBindingsToNode(n);
+              _results1.push(this.modelNodeMap[model.getID()].push(n));
+            }
+            return _results1;
+          }).call(this));
+        }
       }
       return _results;
     };
@@ -580,7 +674,7 @@
         this.element.removeAttribute("cydr-value");
         this.element.setAttribute("cydr-value", v);
       }
-      Cydr.prototype.registerModelBinding(this.model, this);
+      this.subscribe();
       return this.importValue();
     };
 
@@ -618,6 +712,8 @@
     DataType.prototype._value = "";
 
     DataType.isDataType = true;
+
+    DataType.prototype.isDataType = true;
 
     function DataType(val) {
       if (val == null) {
@@ -733,6 +829,10 @@
 
     Model.isModel = true;
 
+    Model.prototype.isModel = true;
+
+    Model.prototype.collection = null;
+
     Model.prototype.stat = function(prop) {
       return Cydr[this.getClass()][prop];
     };
@@ -761,7 +861,7 @@
           break;
         }
         this._mutatedCollections[name] = new Cydr.Collection(this, type, name);
-        f = new Function("return this._mutatedCollections['" + name + "'].getList();");
+        f = new Function("return this.get('" + name + "');");
         this[name] = f.bind(this);
       }
       _ref4 = this.defaults;
@@ -783,43 +883,67 @@
 
     Model.prototype.set = function(prop, value) {
       this._mutatedProperties[prop].setValue(value);
-      return this.notify();
+      if (!Cydr.prototype.isAnalyzing()) {
+        return this.notify(prop);
+      }
     };
 
     Model.prototype.obj = function(prop) {
+      if (Cydr.prototype.isAnalyzing()) {
+        Cydr.prototype.registerFunctionDependency(this, prop);
+      }
       if ((!this.hasProp(prop)) && (!this.hasCollection(prop)) && (typeof this[prop] === "function")) {
-        return this.castFunction(prop);
+        return this[prop]();
       }
       return this._mutatedProperties[prop] || this._mutatedCollections[prop];
     };
 
     Model.prototype.exec = function(exp) {
-      var result;
-      if (typeof this[exp] === "function") {
-        return this[exp].call(this);
+      var func, result, ret, _ref;
+      ret = this._mutatedProperties[exp] || ((_ref = this._mutatedCollections[exp]) != null ? _ref.getList() : void 0);
+      if (ret) {
+        return ret;
       }
-      if (!this.expressions[exp]) {
-        this.expressions[exp] = new Function("scope", "with(scope) {return " + exp + ";}");
+      if (this[exp]) {
+        return this[exp]();
       }
-      result = this.expressions[exp](this);
-      if (typeof result === "function") {
-        result.apply(this, [this]);
+      if (this.getCachedExpression(exp)) {
+        func = this.getCachedExpression(exp);
+        try {
+          result = func(this);
+        } catch (e) {
+          console.log("Could not run expression '" + (func.toString()) + "' on " + (this.getClass()));
+          console.log(e.message);
+          return new Cydr.DataType("");
+        }
+        return result;
       }
-      return result;
+    };
+
+    Model.prototype.getCachedExpression = function(exp) {
+      var body;
+      if (!Cydr._cachedExpressions[this.getClass()]) {
+        Cydr._cachedExpressions[this.getClass()] = [];
+      }
+      if (!Cydr._cachedExpressions[this.getClass()][exp]) {
+        body = "with(scope) { return " + exp + "; }";
+        Cydr._cachedExpressions[this.getClass()][exp] = new Function("scope", body);
+      }
+      return Cydr._cachedExpressions[this.getClass()][exp];
+    };
+
+    Model.prototype.getExpresssionDependencies = function(exp) {
+      return Cydr.prototype.getDependenciesForExpression(this.getClass(), exp);
     };
 
     Model.prototype.get = function(prop) {
-      if ((!this.hasProp(prop)) && (!this.hasCollection(prop)) && (typeof this[prop] === "function")) {
-        return this.castFunction(prop);
-      } else {
-        if (Cydr.prototype.isAnalyzing()) {
-          Cydr.prototype.registerFunctionDependency(this.getClass(), prop);
-        }
-        if (this._mutatedProperties[prop]) {
-          return this._mutatedProperties[prop].getValue();
-        } else if (this._mutatedCollections[prop]) {
-          return this._mutatedCollections[prop].getList();
-        }
+      if (Cydr.prototype.isAnalyzing()) {
+        Cydr.prototype.registerFunctionDependency(this, prop);
+      }
+      if (this._mutatedProperties[prop]) {
+        return this._mutatedProperties[prop].getValue();
+      } else if (this._mutatedCollections[prop]) {
+        return this._mutatedCollections[prop].getList();
       }
     };
 
@@ -926,15 +1050,19 @@
       return _results;
     };
 
-    Model.prototype.notify = function() {
-      var binding, bindings, _i, _len, _results;
-      bindings = Cydr.prototype.getModelBindings(this.getClass() || []);
-      _results = [];
-      for (_i = 0, _len = bindings.length; _i < _len; _i++) {
-        binding = bindings[_i];
-        _results.push(binding.importValue());
+    Model.prototype.getBindings = function() {
+      return Cydr._modelBindings[this.getID()];
+    };
+
+    Model.prototype.notify = function(prop) {
+      Cydr.prototype.fireEvent("ModelUpdated:" + (this.getClass()) + ":" + prop + ":" + (this.getID()));
+      if (this.collection) {
+        return this.collection.notify();
       }
-      return _results;
+    };
+
+    Model.prototype.setCollection = function(collection) {
+      return this.collection = collection;
     };
 
     return Model;
@@ -945,39 +1073,22 @@
 
     __extends(Collection, _super);
 
-    Collection.prototype._list = [];
-
-    Collection.prototype._nodes = [];
-
     Collection.prototype.owner = null;
 
     Collection.prototype.model = null;
 
     Collection.prototype.name = null;
 
-    function Collection(owner, model, name, list) {
+    function Collection(owner, model, name) {
       this.owner = owner;
       this.model = model;
       this.name = name;
       Collection.__super__.constructor.call(this);
-      if (!list) {
-        list = [];
-      }
-      if (list.isDataList) {
-        this._list = list;
-      } else {
-        this._list = new Cydr.DataList(list);
-      }
-      this._list.setCollection(this);
+      this._list = this.createDataList();
     }
 
     Collection.prototype.count = function() {
       return this._list.getItems().length;
-    };
-
-    Collection.prototype.push = function(data) {
-      this._list.addItem(data);
-      return this.owner.notify();
     };
 
     Collection.prototype.getItems = function() {
@@ -988,12 +1099,22 @@
       return this._list;
     };
 
+    Collection.prototype.notify = function() {
+      return this.owner.notify(this.name);
+    };
+
+    Collection.prototype.createDataList = function(items) {
+      if (items == null) {
+        items = [];
+      }
+      return new Cydr.DataList(this, items);
+    };
+
     return Collection;
 
   })(Cydr.Object);
 
   Cydr.DataList = (function(_super) {
-    var _items;
 
     __extends(DataList, _super);
 
@@ -1001,28 +1122,38 @@
 
     DataList.prototype.collection = null;
 
-    _items = [];
-
-    function DataList(items) {
+    function DataList(collection, items) {
+      if (items == null) {
+        items = [];
+      }
       DataList.__super__.constructor.call(this);
-      this._items = items;
+      this._items = [];
+      this.collection = collection;
+      this.pushMany(items);
     }
-
-    DataList.prototype.setCollection = function(collection) {
-      return this.collection = collection;
-    };
 
     DataList.prototype.getItems = function() {
       return this._items;
     };
 
     DataList.prototype.push = function(model) {
+      model.setCollection(this.collection);
       this._items.push(model);
-      return this.collection.owner.notify();
+      return this.collection.owner.notify(this.collection.name);
+    };
+
+    DataList.prototype.pushMany = function(items) {
+      var i, _i, _len, _ref;
+      _ref = items || [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        i = _ref[_i];
+        this.push(i);
+      }
+      return this.collection.owner.notify(this.collection.name);
     };
 
     DataList.prototype.filter = function(filter, value) {
-      var field, i, operator, result, _i, _len, _ref;
+      var field, i, operator, result, _i, _len, _ref, _ref1;
       _ref = filter.split(":"), field = _ref[0], operator = _ref[1];
       if (!operator) {
         operator = "EqualTo";
@@ -1030,14 +1161,15 @@
       result = [];
       switch (operator) {
         case "EqualTo":
-          for (_i = 0, _len = items.length; _i < _len; _i++) {
-            i = items[_i];
-            if (i.get(field === value)) {
+          _ref1 = this._items;
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            i = _ref1[_i];
+            if (i.get(field) === value) {
               result.push(i);
             }
           }
       }
-      return new DataList(result);
+      return this.collection.createDataList(result);
     };
 
     DataList.prototype.isFalsy = function() {
