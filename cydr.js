@@ -47,8 +47,7 @@
     };
 
     Cydr.prototype.registerFunctionDependency = function(model, prop) {
-      Cydr._functionDependencies.push("" + (model.getClass()) + ":" + prop + ":" + (model.getID()));
-      return console.log("" + Cydr._analysisData.model + "." + Cydr._analysisData.expression + " depends on " + (model.getClass()) + "#" + (model.getID()) + "." + prop);
+      return Cydr._functionDependencies.push("" + (model.getClass()) + ":" + prop + ":" + (model.getID()));
     };
 
     Cydr.prototype.getDependentFunctions = function(model, exp) {
@@ -600,45 +599,37 @@
     };
 
     LoopBinding.prototype.importValue = function() {
-      var cachedNodes, i, list, model, n, node, _i, _len, _ref, _results;
+      var list,
+        _this = this;
       this.clearContents();
       list = this.model.exec(this.bindingExec);
-      _ref = list.getItems();
-      _results = [];
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        model = _ref[i];
-        cachedNodes = this.modelNodeMap[model.getID()];
+      return list.each(function(model) {
+        var cachedNodes, n, node, _i, _j, _len, _len1, _ref, _results, _results1;
+        cachedNodes = _this.modelNodeMap[model.getID()];
         if (cachedNodes) {
-          _results.push((function() {
-            var _j, _len1, _results1;
-            _results1 = [];
-            for (_j = 0, _len1 = cachedNodes.length; _j < _len1; _j++) {
-              node = cachedNodes[_j];
-              _results1.push(this.element.appendChild(node));
-            }
-            return _results1;
-          }).call(this));
+          _results = [];
+          for (_i = 0, _len = cachedNodes.length; _i < _len; _i++) {
+            node = cachedNodes[_i];
+            _results.push(_this.element.appendChild(node));
+          }
+          return _results;
         } else {
-          this.modelNodeMap[model.getID()] = [];
-          _results.push((function() {
-            var _j, _len1, _ref1, _results1;
-            _ref1 = this.nodes;
-            _results1 = [];
-            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-              node = _ref1[_j];
-              n = node.cloneNode(true);
-              this.element.appendChild(n);
-              if (typeof n.removeAttribute === "function") {
-                n.removeAttribute("cydr-ignore");
-              }
-              model.applyBindingsToNode(n);
-              _results1.push(this.modelNodeMap[model.getID()].push(n));
+          _this.modelNodeMap[model.getID()] = [];
+          _ref = _this.nodes;
+          _results1 = [];
+          for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+            node = _ref[_j];
+            n = node.cloneNode(true);
+            _this.element.appendChild(n);
+            if (typeof n.removeAttribute === "function") {
+              n.removeAttribute("cydr-ignore");
             }
-            return _results1;
-          }).call(this));
+            model.applyBindingsToNode(n);
+            _results1.push(_this.modelNodeMap[model.getID()].push(n));
+          }
+          return _results1;
         }
-      }
-      return _results;
+      });
     };
 
     return LoopBinding;
@@ -679,8 +670,10 @@
     };
 
     OptionsBinding.prototype.importValue = function() {
-      var dummy, i, list, model, opt, _i, _len, _ref, _results;
+      var dummy, list, val,
+        _this = this;
       this.clearContents();
+      val = this.element.getAttribute("cydr-value");
       if (this.caption) {
         dummy = document.createElement("option");
         dummy.setAttribute("value", "");
@@ -688,17 +681,19 @@
         this.element.appendChild(dummy);
       }
       list = this.model.exec(this.bindingExec);
-      _ref = list.getItems();
-      _results = [];
-      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-        model = _ref[i];
+      return list.each(function(model) {
+        var opt, val1, val2;
         opt = document.createElement("option");
-        opt.setAttribute("cydr-content", this.textField);
-        opt.setAttribute("cydr-attr", "{value: " + this.valueField + "}");
-        this.element.appendChild(opt);
-        _results.push(model.applyBindingsToNode(opt));
-      }
-      return _results;
+        opt.setAttribute("cydr-content", _this.textField);
+        opt.setAttribute("cydr-attr", "{value: " + _this.valueField + "}");
+        val1 = model.exec(_this.valueField);
+        val2 = _this.model.exec(val);
+        if (val1.isDataType && val2.isDataType && (val1.getValue() === val2.getValue())) {
+          opt.setAttribute("selected", true);
+        }
+        _this.element.appendChild(opt);
+        return model.applyBindingsToNode(opt);
+      });
     };
 
     return OptionsBinding;
@@ -742,6 +737,10 @@
       return this.getValue();
     };
 
+    DataType.prototype.renderSortable = function() {
+      return this._value;
+    };
+
     return DataType;
 
   })(Cydr.Object);
@@ -763,6 +762,10 @@
       return (_ref = this.getValue()) != null ? _ref.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : void 0;
     };
 
+    Text.prototype.renderSortable = function() {
+      return this._value.toUpperCase();
+    };
+
     return Text;
 
   })(Cydr.DataType);
@@ -777,6 +780,10 @@
 
     HTMLText.prototype.toString = function() {
       return this.getValue();
+    };
+
+    HTMLText.prototype.renderSortable = function() {
+      return this._value.toUpperCase();
     };
 
     return HTMLText;
@@ -801,6 +808,17 @@
 
     Boolean.prototype.isFalsy = function() {
       return !this.getValue();
+    };
+
+    Boolean.prototype.renderSortable = function() {
+      return parseInt(this._value);
+    };
+
+    Boolean.prototype.getValue = function() {
+      if ((this._value === 1) || (this._value === "1") || (this._value === true)) {
+        return true;
+      }
+      return false;
     };
 
     return Boolean;
@@ -899,8 +917,8 @@
     };
 
     Model.prototype.exec = function(exp) {
-      var func, result, ret, _ref;
-      ret = this._mutatedProperties[exp] || ((_ref = this._mutatedCollections[exp]) != null ? _ref.getList() : void 0);
+      var func, result, ret;
+      ret = this._mutatedProperties[exp] || this._mutatedCollections[exp];
       if (ret) {
         return ret;
       }
@@ -943,7 +961,7 @@
       if (this._mutatedProperties[prop]) {
         return this._mutatedProperties[prop].getValue();
       } else if (this._mutatedCollections[prop]) {
-        return this._mutatedCollections[prop].getList();
+        return this._mutatedCollections[prop];
       }
     };
 
@@ -1084,30 +1102,43 @@
       this.model = model;
       this.name = name;
       Collection.__super__.constructor.call(this);
-      this._list = this.createDataList();
+      this._records = [];
     }
 
     Collection.prototype.count = function() {
-      return this._list.getItems().length;
+      return this._records.length;
     };
 
-    Collection.prototype.getItems = function() {
-      return this._list.getItems();
+    Collection.prototype.get = function() {
+      var list;
+      list = new Cydr.DataList(this._records);
+      list.setCollection(this);
+      return list;
     };
 
-    Collection.prototype.getList = function() {
-      return this._list;
+    Collection.prototype.each = function(callback) {
+      return this.get().each(callback);
     };
 
     Collection.prototype.notify = function() {
       return this.owner.notify(this.name);
     };
 
-    Collection.prototype.createDataList = function(items) {
+    Collection.prototype.push = function(model) {
+      this._records.push(model);
+      return this.owner.notify(this.name);
+    };
+
+    Collection.prototype.pushMany = function(items) {
+      var i, _i, _len;
       if (items == null) {
         items = [];
       }
-      return new Cydr.DataList(this, items);
+      for (_i = 0, _len = items.length; _i < _len; _i++) {
+        i = items[_i];
+        this._records.push(i);
+      }
+      return this.owner.notify(this.name);
     };
 
     return Collection;
@@ -1120,56 +1151,102 @@
 
     DataList.prototype.isDataList = true;
 
+    DataList.prototype.sortField = null;
+
+    DataList.prototype.sortDir = "ASC";
+
+    DataList.prototype.limitNumber = null;
+
     DataList.prototype.collection = null;
 
-    function DataList(collection, items) {
+    function DataList(items) {
       if (items == null) {
         items = [];
       }
       DataList.__super__.constructor.call(this);
-      this._items = [];
-      this.collection = collection;
-      this.pushMany(items);
+      this._items = items;
+      this.filters = [];
+      this.resultSet = [];
     }
+
+    DataList.prototype.setCollection = function(collection) {
+      return this.collection = collection;
+    };
 
     DataList.prototype.getItems = function() {
       return this._items;
     };
 
-    DataList.prototype.push = function(model) {
-      model.setCollection(this.collection);
-      this._items.push(model);
-      return this.collection.owner.notify(this.collection.name);
-    };
-
-    DataList.prototype.pushMany = function(items) {
-      var i, _i, _len, _ref;
-      _ref = items || [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        i = _ref[_i];
-        this.push(i);
-      }
-      return this.collection.owner.notify(this.collection.name);
-    };
-
     DataList.prototype.filter = function(filter, value) {
-      var field, i, operator, result, _i, _len, _ref, _ref1;
-      _ref = filter.split(":"), field = _ref[0], operator = _ref[1];
-      if (!operator) {
-        operator = "EqualTo";
-      }
-      result = [];
-      switch (operator) {
-        case "EqualTo":
-          _ref1 = this._items;
-          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            i = _ref1[_i];
-            if (i.get(field) === value) {
-              result.push(i);
-            }
+      this.filters.push({
+        filter: filter,
+        value: value
+      });
+      return this;
+    };
+
+    DataList.prototype.sort = function(field, dir) {
+      this.sortField = field;
+      this.sortDir = dir;
+      return this;
+    };
+
+    DataList.prototype.limit = function(limit) {
+      this.limitNumber = parseInt(limit);
+      return this;
+    };
+
+    DataList.prototype.execute = function() {
+      var field, filterData, i, model, operator, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3,
+        _this = this;
+      if (this.filters.length) {
+        this.resultSet;
+        _ref = this.filters;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          filterData = _ref[_i];
+          _ref1 = filterData.filter.split(":"), field = _ref1[0], operator = _ref1[1];
+          if (!operator) {
+            operator = "EqualTo";
           }
+          switch (operator) {
+            case "EqualTo":
+              _ref2 = this._items;
+              for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+                i = _ref2[_j];
+                if (i.get(field) === filterData.value) {
+                  this.resultSet.push(i);
+                }
+              }
+          }
+        }
+      } else {
+        this.resultSet = this._items;
       }
-      return this.collection.createDataList(result);
+      if (this.sortField) {
+        this.resultSet = this.resultSet.sort(function(a, b) {
+          var A, B, ret, reverse;
+          reverse = _this.sortDir === "DESC" ? true : false;
+          A = a.obj(_this.sortField).renderSortable();
+          B = b.obj(_this.sortField).renderSortable();
+          if (A < B) {
+            ret = -1;
+          } else if (A > B) {
+            ret = 1;
+          } else {
+            ret = 0;
+          }
+          return ret * [-1, 1][+(!!reverse)];
+        });
+      }
+      if (this.limitNumber) {
+        this.resultSet = this.resultSet.slice(0, this.limitNumber);
+      }
+      _ref3 = this.resultSet;
+      for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+        model = _ref3[_k];
+        model.setCollection(this.collection);
+      }
+      return this.resultSet;
     };
 
     DataList.prototype.isFalsy = function() {
@@ -1177,7 +1254,27 @@
     };
 
     DataList.prototype.count = function() {
-      return this._items.length;
+      return this.execute().length;
+    };
+
+    DataList.prototype.each = function(callback) {
+      var item, results, _i, _len, _results;
+      results = this.execute();
+      _results = [];
+      for (_i = 0, _len = results.length; _i < _len; _i++) {
+        item = results[_i];
+        _results.push(callback(item));
+      }
+      return _results;
+    };
+
+    DataList.prototype.reset = function() {
+      this.filters = [];
+      this.sortField = null;
+      this.sortDir = "ASC";
+      this.limit = null;
+      this.executed = false;
+      return this.resultSet = [];
     };
 
     return DataList;

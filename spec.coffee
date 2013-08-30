@@ -27,12 +27,12 @@ class @TestApp extends Cydr.Controller
 
 	FilteredTodos: ->
 		if @get("CategoryFilter").length
-			result = @get("Todos").filter "Category", @get "CategoryFilter"
+			result = @Todos().get().filter "Category", @get "CategoryFilter"
 			return result
-		@Todos()
+		@Todos().get()
 
 	CompetedTodos: ->
-		@Todos().filter "IsDone", true
+		@Todos().get().filter "IsDone", true
 
 class @Todo extends Cydr.Model
 
@@ -59,11 +59,11 @@ class @Category extends Cydr.Model
 $ ->
 	#loadFixtures "spec.html"
 	window.App = new TestApp "#spec"
-###
-	App.get("Todos").push(new Todo({Title: "Shitty", Category: "One"}));
-	App.get("Todos").push(new Todo({Title: "Shafty", Category: "Two"}));
 	App.get("Categories").push(new Category({Title: "One"}))
 	App.get("Categories").push(new Category({Title: "Two"}))
+
+	App.get("Todos").push(new Todo({Title: "Shitty", Category: "One"}));
+	App.get("Todos").push(new Todo({Title: "Shafty", Category: "Two"}));
 ###
 describe "Unit tests", ->
 
@@ -76,7 +76,7 @@ describe "Unit tests", ->
 
 	it "Adds to collections", ->
 		App.get("Todos").push(new Todo({Title: "Todo1", IsDone: false, Category: "One"}))
-		expect(App.get("Todos").getItems().length).toEqual 1
+		expect(App.Todos().count()).toEqual 1
 
 	it "Will assert that a property doesn't exist", ->
 		expect(App.hasProp "garbage").toBeFalsy()
@@ -90,12 +90,11 @@ describe "Unit tests", ->
 		expect(typeof App.LastName).toEqual "function"
 		expect(typeof App.Todos).toEqual "function"
 		expect(App.LastName().toString()).toEqual "Macho"		
-		expect(App.Todos().isDataList).toBeTruthy()
+		expect(App.Todos().getClass()).toEqual "Collection"
 
 	it "Allows custom getters", ->
 		App.set "FirstName", "Joe"
 		expect(App.FullName()).toEqual "Joe Macho"
-
 describe "Integration tests", ->
 
 	describe "Bindings", ->
@@ -184,7 +183,6 @@ describe "Integration tests", ->
 				App.get("Todos").push(new Todo({Title: "Todo6", IsDone: false, Category: "Two"}))
 				expect($('#todocount').text()).toEqual "6"
 
-				console.log Cydr.Object._instances
 
 
 

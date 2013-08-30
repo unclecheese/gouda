@@ -53,13 +53,13 @@
   <span cydr-content="FirstName"></span>
   <input type="text" cydr-value="FirstName" />
   <input type="text" cydr-value="LastName" />
-  <input type="checkbox" cydr-checked="IsMember" />
+  <input type="checkbox" cydr-checked="IsMember" /> Member?
   <div id="extraclass" cydr-extraclasses="{ismember: IsMember}"></div>
   <a id="attribute" cydr-attr="{href: FirstName}"></a>
   <a cydr-click="set('FirstName','Susan')"></a>
   <div cydr-visible="IsMember"></div>
   <div cydr-hidden="IsMember"></div>
-  <h;1>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></h1>
+  <p>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></p>
   <h2>You have <span id="todocount" cydr-content="Todos().count()"></span> todos</h2>
 
   <div style="float:left;width:300px">
@@ -82,12 +82,12 @@
 
   </div>
 
-
+<div style="float:left;width:300px">
   <h3>Competed Todos</h3>
   <ul cydr-loop="CompetedTodos">
     <li><span cydr-content="Title"></span></li>
   </ul>
-
+</div>
   <div style="clear:both;">&nbsp;</div>
 
 
