@@ -1,4 +1,4 @@
-class @TestApp extends Cydr.Controller
+class @TestApp extends Cydr.ViewModel
 
 	properties:
 		FirstName: "Text"
@@ -59,6 +59,7 @@ class @Category extends Cydr.Model
 $ ->
 	#loadFixtures "spec.html"
 	window.App = new TestApp "#spec"
+###
 	App.get("Categories").push(new Category({Title: "One"}))
 	App.get("Categories").push(new Category({Title: "Two"}))
 

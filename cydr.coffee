@@ -4,9 +4,6 @@ window.fff = (msg, msg2) ->
 
 class window.Cydr
 
-	@_modelBindings = []
-
-	@_collectionBindings = []
 
 	@_analyzedExpressions = []
 
@@ -16,15 +13,12 @@ class window.Cydr
 
 	@_cachedExpressions = []
 
-	@_events: []
 
-	registerModelBinding: (model, binding) ->		
-		Cydr._modelBindings[model.getID()] = [] if not Cydr._modelBindings[model.getID()]
-		Cydr._modelBindings[model.getID()][binding.id] = binding
+	@_eventDispatcher = null
 
-	getModelBindings: (model) ->
-		Cydr._modelBindings[model]
-
+	getEventDispatcher: ->
+		@_eventDispatcher ?= new Cydr.EventDispatcher()
+		@_eventDispatcher
 
 	isAnalyzedExpression: (model, exp) ->
 		Cydr._analyzedExpressions[model]?[exp]
@@ -58,19 +52,25 @@ class window.Cydr
 		false
 
 
-	fireEvent: (sku) ->
-		subscribers = (Cydr._events[sku]) or []
+
+
+class Cydr.EventDispatcher
+
+	constructor: ->
+		@_events = []
+
+
+	fire: (sku) ->
+		subscribers = (@_events[sku]) or []
 		i = 0
 		for id, func of subscribers
 			i++
 			func()
-	
-
-	subscribeToEvent: (sku, listener, func) ->		
-		Cydr._events[sku] = [] if not Cydr._events[sku]
-		Cydr._events[sku]["listener_#{listener.__ID__}"] = func.bind(listener)
 
 
+	subscribe: (sku, listener, func) ->
+		@_events[sku] = [] if not @_events[sku]
+		@_events[sku]["listener_#{listener.__ID__}"] = func.bind listener
 
 
 
@@ -104,7 +104,7 @@ class Cydr.Binding extends Cydr.Object
 
 	allowedTags: []
 
-
+	parent: null
 
 	constructor: (model, element) ->
 		super()
@@ -135,7 +135,7 @@ class Cydr.Binding extends Cydr.Object
 			evt = "ModelUpdated:#{@model.getClass()}:#{@bindingExec}:#{@model.getID()}"
 			t = (@element.getAttribute "title") or ""
 			@element.setAttribute "title", "#{t}//#{evt}"
-			Cydr::subscribeToEvent evt, @, ->					
+			@model.getController().getEventDispatcher().subscribe evt, @, ->					
 				@importValue()
 
 		else if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec			
@@ -163,13 +163,18 @@ class Cydr.Binding extends Cydr.Object
 		new Cydr[@getClass()] model, element
 
 
-	getValue: -> @model.exec @bindingExec
+	getValue: -> @executeBindingExpression()
 
-	getController: ->
+
+	executeBindingExpression: -> @model.exec @bindingExec, @
+
+	getParentBinding: ->
+		return @parent if @parent
 		node = @element
 		while node.parentNode			
-			if node.controller				
-				return node.controller
+			if node.parent
+				@parent = node.parent
+				return @parent
 			node = node.parentNode
 		
 
@@ -243,7 +248,7 @@ class Cydr.JSONBinding extends Cydr.Binding
 	subscribe: ->
 		if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec
 			Cydr::beginAnalysis @model.getClass(), @bindingExec			
-			obj = @model.exec @bindingExec			
+			obj = @executeBindingExpression()
 			if typeof obj isnt "object"			
 				console.error "#{@getClass()} binding must return a JSON object of classname: property/function pairs."
 				return
@@ -260,7 +265,7 @@ class Cydr.JSONBinding extends Cydr.Binding
 class Cydr.ExtraclassesBinding extends Cydr.JSONBinding
 
 	importValue: ->			
-		for cssClass, exec of @model.exec @bindingExec
+		for cssClass, exec of @executeBindingExpression()
 			rx = new RegExp "(^|\\s)#{cssClass}", "g"
 			newClass = @element.className.replace rx, ""			
 			if typeof exec is "function"				
@@ -295,7 +300,7 @@ class Cydr.ClickBinding extends Cydr.Binding
 	init: ->		
 		@element.addEventListener "click", (e) =>
 			e.preventDefault()			
-			@model.exec @bindingExec
+			@executeBindingExpression()
 		super()
 
 
@@ -337,7 +342,7 @@ class Cydr.LoopBinding extends Cydr.Binding
 
 	importValue: ->		
 		@clearContents()		
-		list = @model.exec @bindingExec	
+		list = @executeBindingExpression()
 		list.each (model) =>		
 			cachedNodes = @modelNodeMap[model.getID()]
 			if cachedNodes
@@ -387,7 +392,7 @@ class Cydr.OptionsBinding extends Cydr.LoopBinding
 			dummy.setAttribute "value", ""
 			dummy.innerHTML = @caption
 			@element.appendChild dummy
-		list = @model.exec @bindingExec		
+		list = @model.executeBindingExpression()
 		list.each (model) =>
 			opt = document.createElement "option"
 			opt.setAttribute "cydr-content", @textField
@@ -478,13 +483,15 @@ class Cydr.Model extends Cydr.Object
 
 	_mutatedCollections: {}
 
-	controller: null
+	binding: null
 
 	@isModel: true
 
 	isModel: true
 
 	collection: null
+
+	viewModel: null
 
 
 	stat: (prop) ->		
@@ -530,16 +537,16 @@ class Cydr.Model extends Cydr.Object
 		@_mutatedProperties[prop] or @_mutatedCollections[prop]
 
 
-	exec: (exp) ->
+	exec: (exp, binding) ->
 		ret = (@_mutatedProperties[exp]) or (@_mutatedCollections[exp])
 		return ret if ret
 		
 		if @[exp]			
-			return @[exp]()
+			return @[exp](binding)
 		if @getCachedExpression exp
 			func = @getCachedExpression exp
 			try				
-				result = func(@)				
+				result = func(@, binding)				
 			catch e
 				console.log "Could not run expression '#{func.toString()}' on #{@getClass()}"
 				console.log e.message
@@ -551,8 +558,8 @@ class Cydr.Model extends Cydr.Object
 		if not Cydr._cachedExpressions[@getClass()]
 			Cydr._cachedExpressions[@getClass()] = []
 		if not Cydr._cachedExpressions[@getClass()][exp]
-			body = "with(scope) { return #{exp}; }"			
-			Cydr._cachedExpressions[@getClass()][exp] = new Function "scope", body
+			body = "with(scope) { scope.binding = binding; return #{exp}; }"			
+			Cydr._cachedExpressions[@getClass()][exp] = new Function "scope","binding", body
 
 		Cydr._cachedExpressions[@getClass()][exp]
 	
@@ -595,10 +602,10 @@ class Cydr.Model extends Cydr.Object
 		@_mutatedProperties["__id__"]
 
 	Up: ->
-		@controller
+		@binding.getParentBinding()
 
 
-	bindToElement: (el) ->		
+	bindToElement: (el, viewModel) ->		
 		rx = new RegExp '^cydr-', 'i'
 		alpha = new RegExp '^[a-z0-9_]+$', 'i'
 		atts = el.attributes or []
@@ -608,12 +615,11 @@ class Cydr.Model extends Cydr.Object
 				klass = "#{type.charAt(0).toUpperCase() + type.slice(1)}Binding"
 				if typeof Cydr[klass] is "function"					
 					binding = new Cydr[klass](@, el)					
-					@controller = binding.getController() if not @controller
 					el.context = @					
 					binding.init()
 
 
-	applyBindingsToNode: (node) ->		
+	applyBindingsToNode: (node, viewModel) ->		
 		stack = [node]
 		nl = node.getElementsByTagName "*" or []
 		els = (n for n in nl)
@@ -627,16 +633,19 @@ class Cydr.Model extends Cydr.Object
 						@bindToElement el
 						break
 
-	getBindings: ->
-		Cydr._modelBindings[@getID()]
-
 	notify: (prop) ->		
-		Cydr::fireEvent "ModelUpdated:#{@getClass()}:#{prop}:#{@getID()}"
+		Cydr::getEventDispatcher().fire "ModelUpdated:#{@getClass()}:#{prop}:#{@getID()}"
 		@collection.notify() if @collection
 			
 
 	setCollection: (collection) ->
 		@collection = collection
+
+	setViewModel: (vm) ->
+		@viewModel = vm
+
+	getViewModel: ->
+		@viewModel or @
 
 
 class Cydr.Collection extends Cydr.Object
@@ -770,14 +779,16 @@ class Cydr.DataList extends Cydr.Object
 
 
 
-class Cydr.Controller extends Cydr.Model
+class Cydr.ViewModel extends Cydr.Model
+
+	_eventDispatcher: null
 
 	constructor: (selector) ->
 		super()
 		node = document.querySelector selector
-		if node		
-			node.controller = @
-			@applyBindingsToNode node				
+		if node			
+			node.parent = @			
+			@applyBindingsToNode node, @
 
 
 # Cuz68a32
