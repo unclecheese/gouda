@@ -46,16 +46,23 @@
         result = this.Todos().get().filter("Category", this.get("CategoryFilter"));
         return result;
       }
-      return this.Todos().get();
+      return this.Todos().get().sort("Title", "ASC");
     };
 
     TestApp.prototype.CompetedTodos = function() {
       return this.Todos().get().filter("IsDone", true);
     };
 
+    TestApp.prototype.CreateTodo = function(formdata, element) {
+      if (element) {
+        element.Title.value = "";
+      }
+      return this.Todos().push(new Todo(formdata));
+    };
+
     return TestApp;
 
-  })(Cydr.Controller);
+  })(Cydr.ViewModel);
 
   this.Todo = (function(_super) {
 
@@ -108,142 +115,171 @@
   })(Cydr.Model);
 
   $(function() {
-    window.App = new TestApp("#spec");
-    App.get("Categories").push(new Category({
-      Title: "One"
-    }));
-    App.get("Categories").push(new Category({
-      Title: "Two"
-    }));
-    App.get("Todos").push(new Todo({
-      Title: "Shitty",
-      Category: "One"
-    }));
-    return App.get("Todos").push(new Todo({
-      Title: "Shafty",
-      Category: "Two"
-    }));
+    return window.App = new TestApp("#spec");
   });
 
   /*
-  describe "Unit tests", ->
+  	App.get("Categories").push(new Category({Title: "One"}))
+  	App.get("Categories").push(new Category({Title: "Two"}))
   
-  	it "Sets properties", ->
-  		App.set "FirstName", "Joe"		
-  		expect(App.get "FirstName").toEqual "Joe"
-  
-  	it "Applies default values", ->
-  		expect(App.get "LastName").toEqual "Macho"
-  
-  	it "Adds to collections", ->
-  		App.get("Todos").push(new Todo({Title: "Todo1", IsDone: false, Category: "One"}))
-  		expect(App.Todos().count()).toEqual 1
-  
-  	it "Will assert that a property doesn't exist", ->
-  		expect(App.hasProp "garbage").toBeFalsy()
-  		expect(App.hasProp "FirstName").toBeTruthy()
-  
-  	it "Will assert that a collection doesn't exist", ->
-  		expect(App.hasCollection "garbage").toBeFalsy()
-  		expect(App.hasCollection "Todos").toBeTruthy()
-  
-  	it "Creates methods for every collection and property", ->
-  		expect(typeof App.LastName).toEqual "function"
-  		expect(typeof App.Todos).toEqual "function"
-  		expect(App.LastName().toString()).toEqual "Macho"		
-  		expect(App.Todos().getClass()).toEqual "Collection"
-  
-  	it "Allows custom getters", ->
-  		App.set "FirstName", "Joe"
-  		expect(App.FullName()).toEqual "Joe Macho"
-  describe "Integration tests", ->
-  
-  	describe "Bindings", ->
-  		
-  		it "Has a functioning 'content' binding", ->
-  			App.set "FirstName", "Joe"		
-  			expect($("[cydr-content='FirstName']").html()).toEqual "Joe"
-  
-  		it "Has a two-way 'value' binding", ->
-  			App.set "FirstName", "Bob"
-  			expect($("input[cydr-value='FirstName']").val()).toEqual "Bob"
-  			expect($("[cydr-content='FirstName']").html()).toEqual "Bob"				
-  			e = document.createEvent "HTMLEvents"
-  			e.initEvent "change"
-  			$("input[cydr-value='FirstName']").val("Roger")[0].dispatchEvent e
-  			$("[cydr-content='FirstName']").each ->
-  				expect($(this).html()).toEqual "Roger"
-  			expect(App.get("FirstName")).toEqual "Roger"
-  		
-  		it "Has a two-way 'checked' binding", ->
-  			App.set "IsMember", true
-  			expect($("input[cydr-checked='IsMember']")).toBeChecked()
-  			e = document.createEvent "HTMLEvents"
-  			e.initEvent "change"		
-  			$("input[cydr-checked='IsMember']").attr("checked", false)[0].dispatchEvent e
-  			expect(App.get "IsMember").toBeFalsy()
-  
-  		it "Has an extra classes binding", ->
-  			App.set "IsMember", true
-  			expect($('#extraclass').hasClass("ismember")).toBeTruthy()
-  			App.set "IsMember", false
-  			expect($('#extraclass').hasClass("ismember")).toBeFalsy()
-  		it "Has an attribute binding", ->
-  			App.set "FirstName", "Paul"
-  			expect($('#attribute').attr("href")).toEqual "Paul"
-  
-  		it "Has a click binding", ->
-  			e = document.createEvent "MouseEvents"
-  			e.initEvent "click"
-  			$('[cydr-click]')[0].dispatchEvent e
-  			expect(App.get "FirstName").toEqual "Susan"
-  
-  		it "Has a visible binding", ->
-  			App.set "IsMember", true
-  			expect($('[cydr-visible]')).toBeVisible()
-  			App.set "IsMember", false
-  			expect($('[cydr-visible]')).toBeHidden()
-  
-  		it "Has a hidden binding", ->
-  			App.set "IsMember", true
-  			expect($('[cydr-hidden]')).toBeHidden()
-  			App.set "IsMember", false
-  			expect($('[cydr-hidden]')).toBeVisible()
-  
-  		it "Has an options binding", ->
-  			App.get("Categories").push(new Category({Title: "One"}));
-  			App.get("Categories").push(new Category({Title: "Two"}));
-  			expect($('#optionsbinding option')).toHaveLength 2
-  		describe "Loops", ->
-  
-  			it "Will loop through a collection", ->
-  				App.get("Todos").push(new Todo({Title: "Todo2", IsDone: false, Category: "One"}))
-  				App.get("Todos").push(new Todo({Title: "Todo3", IsDone: true, Category: "Two"}))				
-  				expect($('#todoloop > li')).toHaveLength 3			
-  			it "Will apply bindings to nodes in a loop", ->
-  				App.get("Todos").push(new Todo({Title: "Todo4", IsDone: false, Category: "One"}))
-  				App.get("Todos").push(new Todo({Title: "Todo5", IsDone: true, Category: "One"}))
-  				$todo4 = $('#todoloop > li').eq 3
-  				$todo5 = $('#todoloop > li').eq 4				
-  				
-  				expect($todo4.find('span[cydr-content]').html()).toEqual "Todo4"
-  				expect($todo4.hasClass("done")).toBeFalsy()
-  				expect($todo5.find('input')).toBeChecked()
-  				expect($todo5.find('span[cydr-content]').html()).toEqual "Todo5"
-  				expect($todo5).toHaveClass "done"
-  
-  
-  		describe "Binding expressions", ->
-  
-  			it "Can apply a custom getter with two properties", ->
-  				App.set "FirstName","Andrew"
-  				App.set "LastName","Hore"
-  				expect($('#fullname').text()).toEqual "Andrew Hore"
-  
-  			it "Can count collections", ->
-  				App.get("Todos").push(new Todo({Title: "Todo6", IsDone: false, Category: "Two"}))
-  				expect($('#todocount').text()).toEqual "6"
+  	App.get("Todos").push(new Todo({Title: "Shitty", Category: "One"}));
+  	App.get("Todos").push(new Todo({Title: "Shafty", Category: "Two"}));
   */
 
+
+  describe("Unit tests", function() {
+    it("Sets properties", function() {
+      App.set("FirstName", "Joe");
+      return expect(App.get("FirstName")).toEqual("Joe");
+    });
+    it("Applies default values", function() {
+      return expect(App.get("LastName")).toEqual("Macho");
+    });
+    it("Adds to collections", function() {
+      App.get("Todos").push(new Todo({
+        Title: "Todo1",
+        IsDone: false,
+        Category: "One"
+      }));
+      return expect(App.Todos().count()).toEqual(1);
+    });
+    it("Will assert that a property doesn't exist", function() {
+      expect(App.hasProp("garbage")).toBeFalsy();
+      return expect(App.hasProp("FirstName")).toBeTruthy();
+    });
+    it("Will assert that a collection doesn't exist", function() {
+      expect(App.hasCollection("garbage")).toBeFalsy();
+      return expect(App.hasCollection("Todos")).toBeTruthy();
+    });
+    it("Creates methods for every collection and property", function() {
+      expect(typeof App.LastName).toEqual("function");
+      expect(typeof App.Todos).toEqual("function");
+      expect(App.LastName().toString()).toEqual("Macho");
+      return expect(App.Todos().getClass()).toEqual("Collection");
+    });
+    return it("Allows custom getters", function() {
+      App.set("FirstName", "Joe");
+      return expect(App.FullName()).toEqual("Joe Macho");
+    });
+  });
+
+  describe("Integration tests", function() {
+    return describe("Bindings", function() {
+      it("Has a functioning 'content' binding", function() {
+        App.set("FirstName", "Joe");
+        return expect($("[cydr-content='FirstName']").html()).toEqual("Joe");
+      });
+      it("Has a two-way 'value' binding", function() {
+        var e;
+        App.set("FirstName", "Bob");
+        expect($("input[cydr-value='FirstName']").val()).toEqual("Bob");
+        expect($("[cydr-content='FirstName']").html()).toEqual("Bob");
+        e = document.createEvent("HTMLEvents");
+        e.initEvent("change");
+        $("input[cydr-value='FirstName']").val("Roger")[0].dispatchEvent(e);
+        $("[cydr-content='FirstName']").each(function() {
+          return expect($(this).html()).toEqual("Roger");
+        });
+        return expect(App.get("FirstName")).toEqual("Roger");
+      });
+      it("Has a two-way 'checked' binding", function() {
+        var e;
+        App.set("IsMember", true);
+        expect($("input[cydr-checked='IsMember']")).toBeChecked();
+        e = document.createEvent("HTMLEvents");
+        e.initEvent("change");
+        $("input[cydr-checked='IsMember']").attr("checked", false)[0].dispatchEvent(e);
+        return expect(App.get("IsMember")).toBeFalsy();
+      });
+      it("Has an extra classes binding", function() {
+        App.set("IsMember", true);
+        expect($('#extraclass').hasClass("ismember")).toBeTruthy();
+        App.set("IsMember", false);
+        return expect($('#extraclass').hasClass("ismember")).toBeFalsy();
+      });
+      it("Has an attribute binding", function() {
+        App.set("FirstName", "Paul");
+        return expect($('#attribute').attr("href")).toEqual("Paul");
+      });
+      it("Has a click binding", function() {
+        var e;
+        e = document.createEvent("MouseEvents");
+        e.initEvent("click");
+        $('[cydr-click]')[0].dispatchEvent(e);
+        return expect(App.get("FirstName")).toEqual("Susan");
+      });
+      it("Has a visible binding", function() {
+        App.set("IsMember", true);
+        expect($('[cydr-visible]')).toBeVisible();
+        App.set("IsMember", false);
+        return expect($('[cydr-visible]')).toBeHidden();
+      });
+      it("Has a hidden binding", function() {
+        App.set("IsMember", true);
+        expect($('[cydr-hidden]')).toBeHidden();
+        App.set("IsMember", false);
+        return expect($('[cydr-hidden]')).toBeVisible();
+      });
+      it("Has an options binding", function() {
+        App.get("Categories").push(new Category({
+          Title: "One"
+        }));
+        App.get("Categories").push(new Category({
+          Title: "Two"
+        }));
+        return expect($('#optionsbinding option')).toHaveLength(2);
+      });
+      describe("Loops", function() {
+        it("Will loop through a collection", function() {
+          App.get("Todos").push(new Todo({
+            Title: "Todo2",
+            IsDone: false,
+            Category: "One"
+          }));
+          App.get("Todos").push(new Todo({
+            Title: "Todo3",
+            IsDone: true,
+            Category: "Two"
+          }));
+          return expect($('#todoloop > li')).toHaveLength(3);
+        });
+        return it("Will apply bindings to nodes in a loop", function() {
+          var $todo4, $todo5;
+          App.get("Todos").push(new Todo({
+            Title: "Todo4",
+            IsDone: false,
+            Category: "One"
+          }));
+          App.get("Todos").push(new Todo({
+            Title: "Todo5",
+            IsDone: true,
+            Category: "One"
+          }));
+          $todo4 = $('#todoloop > li').eq(3);
+          $todo5 = $('#todoloop > li').eq(4);
+          expect($todo4.find('span[cydr-content]').html()).toEqual("Todo4");
+          expect($todo4.hasClass("done")).toBeFalsy();
+          expect($todo5.find('input')).toBeChecked();
+          expect($todo5.find('span[cydr-content]').html()).toEqual("Todo5");
+          return expect($todo5).toHaveClass("done");
+        });
+      });
+      return describe("Binding expressions", function() {
+        it("Can apply a custom getter with two properties", function() {
+          App.set("FirstName", "Andrew");
+          App.set("LastName", "Hore");
+          return expect($('#fullname').text()).toEqual("Andrew Hore");
+        });
+        return it("Can count collections", function() {
+          App.get("Todos").push(new Todo({
+            Title: "Todo6",
+            IsDone: false,
+            Category: "Two"
+          }));
+          return expect($('#todocount').text()).toEqual("6");
+        });
+      });
+    });
+  });
 
 }).call(this);

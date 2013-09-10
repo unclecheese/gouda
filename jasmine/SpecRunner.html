@@ -14,7 +14,7 @@
   <script type="text/javascript" src="vendor/jquery/jquery.js"></script>
 
   <script type="text/javascript" src="lib/jasmine-jquery.js"></script>
-
+  <script type="text/javascript" src="../form2js.js"></script>    
   <script type="text/javascript" src="../cydr.js"></script>
   <script type="text/javascript" src="../spec.js"></script>
 
@@ -62,6 +62,14 @@
   <p>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></p>
   <h2>You have <span id="todocount" cydr-content="Todos().count()"></span> todos</h2>
 
+  <h4>Add a todo</h4>
+  <form id="todo-add" cydr-submit="CreateTodo">
+    <input name="Title" type="text" placeholder="Title of todo..." /><br />
+    Category:
+    <select cydr-options="Categories" cydr-optionvalue="Title" cydr-optiontext="Title" name="Category"></select><br />
+    <input type="checkbox" name="IsDone" /> This todo is done<br />
+    <button type="submit">Add this todo</button>
+  </form>
   <div style="float:left;width:300px">
     All Todos:
     <ul id="todoloop" cydr-loop="Todos">
