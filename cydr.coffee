@@ -30,25 +30,25 @@ class window.Cydr
 
 	getDependentFunctions: (model, exp) -> Cydr._functionDependencies[model][exp] or []
 
-	isAnalyzing: -> 
+	isAnalyzing: ->
 		if Cydr._analysisData.model then true else false
 
-	beginAnalysis: (model, exp) ->		
+	beginAnalysis: (model, exp) ->
 		Cydr._analyzedExpressions[model] = [] if not Cydr._analyzedExpressions[model]
 		Cydr._analysisData =
 			model: model
-			expression: exp		
+			expression: exp
 
 	endAnalysis: ->
 		m = Cydr._analysisData.model
 		e = Cydr._analysisData.expression
 		Cydr._analyzedExpressions[m][e] = Cydr._functionDependencies
 		Cydr._analysisData = {}
-		Cydr._functionDependencies = []		
+		Cydr._functionDependencies = []
 
 	getDependenciesForExpression: (model, exp) ->
 		if Cydr._analyzedExpressions[model]
-			return Cydr._analyzedExpressions[model][exp]	
+			return Cydr._analyzedExpressions[model][exp]
 		false
 
 
@@ -117,49 +117,49 @@ class Cydr.Binding extends Cydr.Object
 
 	init: ->
 		if @allowedTags.length and @element.tagName not in @allowedTags
-			alert "#{@getBindingAttribute()} binding must be on one of the following tags: #{@allowedTags.join ','}."		
-		if @exportValueEvent			
-			@element.addEventListener @exportValueEvent, =>				
+			alert "#{@getBindingAttribute()} binding must be on one of the following tags: #{@allowedTags.join ','}."
+		if @exportValueEvent
+			@element.addEventListener @exportValueEvent, =>
 				@exportValue()
 		@element.setAttribute "title", "ID: #{@model.getID()}"
 		@subscribe()
-		@importValue()	
+		@importValue()
 
 
 	importValue: ->
 
 	exportValue: ->
 
-	subscribe: ->		
+	subscribe: ->
 		if @model.hasProp(@bindingExec) or @model.hasCollection(@bindingExec)
 			evt = "ModelUpdated:#{@model.getClass()}:#{@bindingExec}:#{@model.getID()}"
 			t = (@element.getAttribute "title") or ""
 			@element.setAttribute "title", "#{t}//#{evt}"
-			@model.getController().getEventDispatcher().subscribe evt, @, ->					
+			@model.getController().getEventDispatcher().subscribe evt, @, ->
 				@importValue()
 
-		else if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec			
-			Cydr::beginAnalysis @model.getClass(), @bindingExec			
+		else if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec
+			Cydr::beginAnalysis @model.getClass(), @bindingExec
 			@model.exec @bindingExec
 			Cydr::endAnalysis()
-		
+
 		result = @model.getExpresssionDependencies @bindingExec
 		if result
-			for dependency in result				
-				parts = dependency.split ":"								
+			for dependency in result
+				parts = dependency.split ":"
 				evt = "ModelUpdated:#{parts[0]}:#{parts[1]}:#{parts[2]}"
 				t = (@element.getAttribute "title") or ""
 				@element.setAttribute "title", "#{t}//#{evt}"
-				Cydr::subscribeToEvent evt, @, ->					
+				Cydr::subscribeToEvent evt, @, ->
 					@importValue()
 
 
 	getBindingAttribute: ->
-		klass = @constructor.name.replace /Binding$/, ''		
+		klass = @constructor.name.replace /Binding$/, ''
 		"cydr-#{klass.toLowerCase()}"
 
 
-	create: (model, element) ->		
+	create: (model, element) ->
 		new Cydr[@getClass()] model, element
 
 
@@ -171,12 +171,12 @@ class Cydr.Binding extends Cydr.Object
 	getParentBinding: ->
 		return @parent if @parent
 		node = @element
-		while node.parentNode			
+		while node.parentNode
 			if node.parent
 				@parent = node.parent
 				return @parent
 			node = node.parentNode
-		
+
 
 
 class Cydr.ContentBinding extends Cydr.Binding
@@ -192,11 +192,11 @@ class Cydr.SubmitBinding extends Cydr.Binding
 		@element.addEventListener "submit", (e) =>
 			e.preventDefault()
 			formData = window.form2object @element
-			func = @bindingExec			
-			if typeof @model[func] is "function"	
+			func = @bindingExec
+			if typeof @model[func] is "function"
 				@model[func](formData)
 		super()
-			
+
 
 
 
@@ -206,22 +206,22 @@ class Cydr.ValueBinding extends Cydr.Binding
 
 	exportValueEvent: "change"
 
-	importValue: ->		
+	importValue: ->
 		if @element.tagName is "INPUT"
 			@element.value = @getValue()
-		else if @element.tagName is "SELECT"			
-			for opt in @element.options				
+		else if @element.tagName is "SELECT"
+			for opt in @element.options
 				if opt.value is @getValue().toString()
 					opt.selected = true
 					break
 
-	exportValue: ->		
+	exportValue: ->
 		if @element.tagName is "INPUT"
 			@model.set @bindingExec, @element.value
 		else if @element.tagName is "SELECT"
 
 			val = @element.options[@element.selectedIndex]?.getAttribute "value"
-			val ?= ""			
+			val ?= ""
 			@model.set @bindingExec, val
 
 
@@ -232,13 +232,13 @@ class Cydr.CheckedBinding extends Cydr.Binding
 
 	exportValueEvent: "change"
 
-	importValue: ->	
-		v = @getValue()		
+	importValue: ->
+		v = @getValue()
 		if (v?.isDataType) and (not v.isFalsy())
-			@element.setAttribute "checked", "checked" 
+			@element.setAttribute "checked", "checked"
 		else
 			@element.removeAttribute "checked"
-		
+
 
 	exportValue: -> @model.set @bindingExec, @element.checked
 
@@ -247,29 +247,29 @@ class Cydr.JSONBinding extends Cydr.Binding
 
 	subscribe: ->
 		if not Cydr::isAnalyzedExpression @model.getClass(), @bindingExec
-			Cydr::beginAnalysis @model.getClass(), @bindingExec			
+			Cydr::beginAnalysis @model.getClass(), @bindingExec
 			obj = @executeBindingExpression()
-			if typeof obj isnt "object"			
+			if typeof obj isnt "object"
 				console.error "#{@getClass()} binding must return a JSON object of classname: property/function pairs."
 				return
 			for className, prop of obj
 				if typeof prop is "function" then prop() else @model.exec prop
-			Cydr::endAnalysis()			
+			Cydr::endAnalysis()
 		result = @model.getExpresssionDependencies @bindingExec
 		if result
-			for dependency in result				
-				parts = dependency.split ":"				
-				Cydr::subscribeToEvent "ModelUpdated:#{@model.getClass()}:#{parts[1]}:#{@model.getID()}", @, ->					
-					@importValue()		
+			for dependency in result
+				parts = dependency.split ":"
+				Cydr::subscribeToEvent "ModelUpdated:#{@model.getClass()}:#{parts[1]}:#{@model.getID()}", @, ->
+					@importValue()
 
 class Cydr.ExtraclassesBinding extends Cydr.JSONBinding
 
-	importValue: ->			
+	importValue: ->
 		for cssClass, exec of @executeBindingExpression()
 			rx = new RegExp "(^|\\s)#{cssClass}", "g"
-			newClass = @element.className.replace rx, ""			
-			if typeof exec is "function"				
-				result = exec()				
+			newClass = @element.className.replace rx, ""
+			if typeof exec is "function"
+				result = exec()
 				if not result?.isDataType then return
 				unless result.isFalsy()
 					@element.className += if @element.className.length then " #{cssClass}" else cssClass
@@ -280,7 +280,7 @@ class Cydr.AttrBinding extends Cydr.JSONBinding
 
 	importValue: ->
 		if typeof @getValue() isnt "object"
-			console.error "#{@getClass()} binding must return a JSON object of attribute-name: property/function pairs."			
+			console.error "#{@getClass()} binding must return a JSON object of attribute-name: property/function pairs."
 		for attribute, exec of @getValue()
 			if typeof exec is "function"
 				@element.setAttribute attribute, exec()
@@ -292,14 +292,14 @@ class Cydr.VisibleBinding extends Cydr.Binding
 
 class Cydr.HiddenBinding extends Cydr.Binding
 
-	importValue: ->		
+	importValue: ->
 		if @getValue().isFalsy() then @element.style.display = null else @element.style.display = "none"
 
 class Cydr.ClickBinding extends Cydr.Binding
 
-	init: ->		
+	init: ->
 		@element.addEventListener "click", (e) =>
-			e.preventDefault()			
+			e.preventDefault()
 			@executeBindingExpression()
 		super()
 
@@ -318,17 +318,17 @@ class Cydr.LoopBinding extends Cydr.Binding
 		@loadTemplate() if @nodes.length is 0
 		super()
 
-	loadTemplate: ->		
-		for n in @element.getElementsByTagName "*"				
-			n.setAttribute? "cydr-ignore", "true"			
+	loadTemplate: ->
+		for n in @element.getElementsByTagName "*"
+			n.setAttribute? "cydr-ignore", "true"
 		nodes = @element.innerHTML
 		dummy = document.createElement "div"
 		dummy.innerHTML = nodes
-		@clearContents()		
+		@clearContents()
 		for n in dummy.getElementsByTagName "*"
 			n.removeAttribute? "cydr-ignore"
 		@template = dummy
-		sib = @template.children[0]		
+		sib = @template.children[0]
 		@nodes.push sib
 		loop
 			sib = sib.nextSibling
@@ -337,23 +337,23 @@ class Cydr.LoopBinding extends Cydr.Binding
 
 
 	clearContents: ->
-		while @element.hasChildNodes()			
-			@element.removeChild @element.lastChild			
+		while @element.hasChildNodes()
+			@element.removeChild @element.lastChild
 
-	importValue: ->		
-		@clearContents()		
+	importValue: ->
+		@clearContents()
 		list = @executeBindingExpression()
-		list.each (model) =>		
+		list.each (model) =>
 			cachedNodes = @modelNodeMap[model.getID()]
 			if cachedNodes
-				for node in cachedNodes					
+				for node in cachedNodes
 					@element.appendChild node
 			else
 				@modelNodeMap[model.getID()] = []
-				for node in @nodes				
+				for node in @nodes
 					n = node.cloneNode true
 					@element.appendChild n
-					n.removeAttribute? "cydr-ignore"					
+					n.removeAttribute? "cydr-ignore"
 					model.applyBindingsToNode n
 					@modelNodeMap[model.getID()].push n
 
@@ -367,15 +367,15 @@ class Cydr.OptionsBinding extends Cydr.LoopBinding
 	caption: null
 
 	collection: null
-	
 
-	init: ->		
+
+	init: ->
 		if @element.tagName isnt "SELECT"
-			alert "cydr-options binding must be on a select element."		
+			alert "cydr-options binding must be on a select element."
 		@valueField = @element.getAttribute "cydr-optionvalue"
 		@textField = @element.getAttribute "cydr-optiontext"
 		@caption = @element.getAttribute "cydr-optioncaption"
-		
+
 		# ensure the value attribute goes last
 		v = @element.getAttribute "cydr-value"
 		if v
@@ -397,13 +397,13 @@ class Cydr.OptionsBinding extends Cydr.LoopBinding
 			opt = document.createElement "option"
 			opt.setAttribute "cydr-content", @textField
 			opt.setAttribute "cydr-attr", "{value: #{@valueField}}"
-			
+
 			val1 = model.exec(@valueField)
 			val2 = @model.exec(val)
-			if val1.isDataType and val2.isDataType and (val1.getValue() is val2.getValue())				
+			if val1.isDataType and val2.isDataType and (val1.getValue() is val2.getValue())
 				opt.setAttribute "selected", true
 			@element.appendChild opt
-			model.applyBindingsToNode opt			
+			model.applyBindingsToNode opt
 
 
 
@@ -419,14 +419,14 @@ class Cydr.DataType extends Cydr.Object
 	isDataType: true
 
 	constructor: (val = "") ->
-		super()		
+		super()
 		@_value = val
-		
+
 	setValue: (val) -> @_value = val
 
 	getValue: -> @_value
 
-	isFalsy: ->		
+	isFalsy: ->
 		if not @_value or @_value is "undefined"
 			return true
 		@_value.length is 0
@@ -467,8 +467,8 @@ class Cydr.Boolean extends Cydr.DataType
 		false
 
 class Cydr.Model extends Cydr.Object
-	
-	
+
+
 	properties: {}
 
 	has_many: {}
@@ -494,59 +494,59 @@ class Cydr.Model extends Cydr.Object
 	viewModel: null
 
 
-	stat: (prop) ->		
+	stat: (prop) ->
 		Cydr[@getClass()][prop]
 
 
 
-	constructor: (data) ->	
-		super()		
+	constructor: (data) ->
+		super()
 		@_mutatedProperties = {}
-		@_mutatedCollections = {}		
-		for name, type of @properties			
+		@_mutatedCollections = {}
+		for name, type of @properties
 			if not Cydr[type]?.isDataType
 				throw new Error "DataType 'Cydr.#{type}' does not exist!"
 				break
 			@_mutatedProperties[name] = new Cydr[type]()
 			f = new Function "return this.obj('#{name}');"
 			@[name] = f.bind @
-		for name, type of @has_many			
-			if not window[type]?.isModel				
+		for name, type of @has_many
+			if not window[type]?.isModel
 				throw new Error "Model '#{type}' does not exist!"
-				break			
+				break
 			@_mutatedCollections[name] = new Cydr.Collection @, type, name
 			f = new Function "return this.get('#{name}');"
 			@[name] = f.bind @
-		for prop, val of @defaults			
+		for prop, val of @defaults
 			@_mutatedProperties[prop].setValue val if @hasProp prop
-		for prop, val of data			
+		for prop, val of data
 			@_mutatedProperties[prop].setValue val if @hasProp prop
 		@_mutatedProperties["__id__"] = Cydr.Object._instanceCount
-		@_mutatedProperties["__destroyed__"] = false				
+		@_mutatedProperties["__destroyed__"] = false
 
-	set: (prop, value) ->		
-		@_mutatedProperties[prop].setValue value		
+	set: (prop, value) ->
+		@_mutatedProperties[prop].setValue value
 		@notify(prop) if not Cydr::isAnalyzing()
 
 
 	obj: (prop) ->
-		if Cydr::isAnalyzing()			
-			Cydr::registerFunctionDependency @, prop		
+		if Cydr::isAnalyzing()
+			Cydr::registerFunctionDependency @, prop
 		if (not @hasProp prop) and (not @hasCollection prop) and (typeof @[prop] is "function")
-			return @[prop]()		
+			return @[prop]()
 		@_mutatedProperties[prop] or @_mutatedCollections[prop]
 
 
 	exec: (exp, binding) ->
 		ret = (@_mutatedProperties[exp]) or (@_mutatedCollections[exp])
 		return ret if ret
-		
-		if @[exp]			
+
+		if @[exp]
 			return @[exp](binding)
 		if @getCachedExpression exp
 			func = @getCachedExpression exp
-			try				
-				result = func(@, binding)				
+			try
+				result = func(@, binding)
 			catch e
 				console.log "Could not run expression '#{func.toString()}' on #{@getClass()}"
 				console.log e.message
@@ -558,31 +558,31 @@ class Cydr.Model extends Cydr.Object
 		if not Cydr._cachedExpressions[@getClass()]
 			Cydr._cachedExpressions[@getClass()] = []
 		if not Cydr._cachedExpressions[@getClass()][exp]
-			body = "with(scope) { scope.binding = binding; return #{exp}; }"			
+			body = "with(scope) { scope.binding = binding; return #{exp}; }"
 			Cydr._cachedExpressions[@getClass()][exp] = new Function "scope","binding", body
 
 		Cydr._cachedExpressions[@getClass()][exp]
-	
+
 
 	getExpresssionDependencies: (exp) ->
 		Cydr::getDependenciesForExpression @getClass(), exp
 
-	get: (prop) ->		
-		if Cydr::isAnalyzing()			
+	get: (prop) ->
+		if Cydr::isAnalyzing()
 			Cydr::registerFunctionDependency @, prop
 		if @_mutatedProperties[prop]
 			return @_mutatedProperties[prop].getValue()
-		else if @_mutatedCollections[prop]				
+		else if @_mutatedCollections[prop]
 			return @_mutatedCollections[prop]
 
 
 	castFunction: (func) ->
 		if not Cydr::isAnalyzedFunction @getClass(), func
-			Cydr::beginAnalysis @getClass(), func			
-			ret = @[func]()	
+			Cydr::beginAnalysis @getClass(), func
+			ret = @[func]()
 			Cydr::endAnalysis()
 		if not ret.isDataType and not ret.isDataList
-			dataType = @casting[func] or "Text"			
+			dataType = @casting[func] or "Text"
 			if typeof Cydr[dataType] isnt "function"
 				alert "Tried to cast #{func} as #{dataType}, but that datatype doesn't exist."
 				return
@@ -590,11 +590,11 @@ class Cydr.Model extends Cydr.Object
 		ret
 
 
-	hasProp: (prop) ->		
+	hasProp: (prop) ->
 		@properties[prop] isnt undefined
 
 
-	hasCollection: (collection) ->		
+	hasCollection: (collection) ->
 		@has_many[collection] isnt undefined
 
 
@@ -605,38 +605,38 @@ class Cydr.Model extends Cydr.Object
 		@binding.getParentBinding()
 
 
-	bindToElement: (el, viewModel) ->		
+	bindToElement: (el, viewModel) ->
 		rx = new RegExp '^cydr-', 'i'
 		alpha = new RegExp '^[a-z0-9_]+$', 'i'
 		atts = el.attributes or []
-		for att in atts			
+		for att in atts
 			if rx.test att.name
 				type = att.name.split("-").pop()
 				klass = "#{type.charAt(0).toUpperCase() + type.slice(1)}Binding"
-				if typeof Cydr[klass] is "function"					
-					binding = new Cydr[klass](@, el)					
-					el.context = @					
+				if typeof Cydr[klass] is "function"
+					binding = new Cydr[klass](@, el)
+					el.context = @
 					binding.init()
 
 
-	applyBindingsToNode: (node, viewModel) ->		
+	applyBindingsToNode: (node, viewModel) ->
 		stack = [node]
 		nl = node.getElementsByTagName "*" or []
 		els = (n for n in nl)
-		els.unshift node	
+		els.unshift node
 		rx = new RegExp '^cydr-', 'i'
-		for el in els			
-			atts = el?.attributes or []	
-			if not el.getAttribute? "cydr-ignore"				
-				for att in atts					
+		for el in els
+			atts = el?.attributes or []
+			if not el.getAttribute? "cydr-ignore"
+				for att in atts
 					if rx.test att.name
 						@bindToElement el
 						break
 
-	notify: (prop) ->		
+	notify: (prop) ->
 		Cydr::getEventDispatcher().fire "ModelUpdated:#{@getClass()}:#{prop}:#{@getID()}"
 		@collection.notify() if @collection
-			
+
 
 	setCollection: (collection) ->
 		@collection = collection
@@ -662,7 +662,7 @@ class Cydr.Collection extends Cydr.Object
 
 	count: -> @_records.length
 
-	get: -> 
+	get: ->
 		list = new Cydr.DataList @_records
 		list.setCollection @
 		list
@@ -671,7 +671,7 @@ class Cydr.Collection extends Cydr.Object
 
 	notify: -> @owner.notify @name
 
-	push: (model) ->	
+	push: (model) ->
 		@_records.push model
 		@owner.notify @name
 
@@ -701,14 +701,14 @@ class Cydr.DataList extends Cydr.Object
 		super()
 		@_items = items
 		@filters = []
-		@resultSet = []	
+		@resultSet = []
 
 
 	setCollection: (collection) ->
 		@collection = collection
 
 
-	getItems: ->		
+	getItems: ->
 		@_items
 
 
@@ -729,8 +729,8 @@ class Cydr.DataList extends Cydr.Object
 		@
 
 
-	execute: ->	
-		if @filters.length			
+	execute: ->
+		if @filters.length
 			@resultSet
 			for filterData in @filters
 				[field, operator] = filterData.filter.split ":"
@@ -739,22 +739,22 @@ class Cydr.DataList extends Cydr.Object
 					when "EqualTo"
 						for i in @_items
 							if i.get(field) is filterData.value
-								@resultSet.push i 
+								@resultSet.push i
 		else
-			@resultSet = @_items					
-		if @sortField			
+			@resultSet = @_items
+		if @sortField
 			@resultSet = @resultSet.sort (a, b) =>
 				reverse = if @sortDir is "DESC" then true else false
 				A = a.obj(@sortField).renderSortable()
 				B = b.obj(@sortField).renderSortable()
-				if (A < B) 
+				if (A < B)
 					ret = -1
-				else if (A > B) 
+				else if (A > B)
 					ret = 1
-				else 
+				else
 					ret = 0
-				ret * [-1,1][+!!reverse]		
-		if @limitNumber		
+				ret * [-1,1][+!!reverse]
+		if @limitNumber
 			@resultSet = @resultSet.slice 0, @limitNumber
 		model.setCollection @collection for model in @resultSet
 		@resultSet
@@ -762,10 +762,10 @@ class Cydr.DataList extends Cydr.Object
 	isFalsy: -> @_items.length is 0
 
 
-	count: -> 
-		@execute().length		
+	count: ->
+		@execute().length
 
-	each: (callback) ->		
+	each: (callback) ->
 		results = @execute()
 		callback(item) for item in results
 
@@ -786,8 +786,8 @@ class Cydr.ViewModel extends Cydr.Model
 	constructor: (selector) ->
 		super()
 		node = document.querySelector selector
-		if node			
-			node.parent = @			
+		if node
+			node.parent = @
 			@applyBindingsToNode node, @
 
 
