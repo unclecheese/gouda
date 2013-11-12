@@ -13,6 +13,7 @@
     }
   };
 
+<<<<<<< HEAD
   window.Cydr = (function() {
     function Cydr() {}
 
@@ -98,13 +99,37 @@
 
       subscribers = this._events[sku] || [];
       i = 0;
+=======
+  window.Cydr = {};
+
+  window.Cydr.Config = {};
+
+  window.Cydr.EventDispatcher = {
+    events: [],
+    fire: function(sku) {
+      var e, evt, func, id, listenerID, model, part, parts, prop, subscribers, type, _i, _len, _results;
+      parts = sku.split(":");
+      type = parts[0], model = parts[1], prop = parts[2], id = parts[3];
+      evt = [];
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       _results = [];
-      for (id in subscribers) {
-        func = subscribers[id];
-        i++;
-        _results.push(func());
+      for (_i = 0, _len = parts.length; _i < _len; _i++) {
+        part = parts[_i];
+        evt.push(part);
+        e = evt.join(":");
+        subscribers = Cydr.EventDispatcher.events[e] || [];
+        _results.push((function() {
+          var _results1;
+          _results1 = [];
+          for (listenerID in subscribers) {
+            func = subscribers[listenerID];
+            _results1.push(func(e, type, model, prop, id));
+          }
+          return _results1;
+        })());
       }
       return _results;
+<<<<<<< HEAD
     };
 
     EventDispatcher.prototype.subscribe = function(sku, listener, func) {
@@ -117,6 +142,22 @@
     return EventDispatcher;
 
   })();
+=======
+    },
+    subscribe: function(sku, listener, func) {
+      if (!Cydr.EventDispatcher.events[sku]) {
+        Cydr.EventDispatcher.events[sku] = [];
+      }
+      return Cydr.EventDispatcher.events[sku]["listener_" + listener.__ID__] = func.bind(listener);
+    },
+    revoke: function(sku, listener) {
+      delete Cydr.EventDispatcher.events[sku]["listener_" + listener.__ID__];
+      if (Cydr.EventDispatcher.events[sku].length === 0) {
+        return delete Cydr.EventDispatcher.events[sku];
+      }
+    }
+  };
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
 
   Cydr.Object = (function() {
     Object._instanceCount = 0;
@@ -132,6 +173,43 @@
 
     Object.prototype.getClass = function() {
       return this.constructor.name;
+    };
+
+    Object.prototype.getConfig = function(prop, key) {
+      if (!Cydr.Config[this.getClass()]) {
+        Cydr.Config[this.getClass()] = [];
+      }
+      if (key) {
+        if (!Cydr.Config[this.getClass()][prop]) {
+          Cydr.Config[this.getClass()][prop] = [];
+        }
+        return Cydr.Config[this.getClass()][prop][key];
+      }
+      return Cydr.Config[this.getClass()][prop];
+    };
+
+    Object.prototype.setConfig = function(prop, val) {
+      if (!Cydr.Config[this.getClass()]) {
+        Cydr.Config[this.getClass()] = [];
+      }
+      return Cydr.Config[this.getClass()][prop] = val;
+    };
+
+    Object.prototype.pushConfig = function(prop, val1, val2) {
+      if (!Cydr.Config[this.getClass()]) {
+        Cydr.Config[this.getClass()] = [];
+      }
+      if (!Cydr.Config[this.getClass()][prop]) {
+        Cydr.Config[this.getClass()][prop] = [];
+      }
+      if (val2) {
+        if (!Cydr.Config[this.getClass()][prop][val1]) {
+          Cydr.Config[this.getClass()][prop][val1] = [];
+        }
+        return Cydr.Config[this.getClass()][prop][val1].push(val2);
+      } else {
+        return Cydr.Config[this.getClass()][prop].push(val1);
+      }
     };
 
     return Object;
@@ -157,7 +235,11 @@
 
     Binding.prototype.parent = null;
 
+<<<<<<< HEAD
     function Binding(model, element) {
+=======
+    function Binding(model, element, parent) {
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       var attValue;
 
       Binding.__super__.constructor.call(this);
@@ -165,6 +247,7 @@
       this.model = model;
       attValue = this.element.getAttribute(this.getBindingAttribute());
       this.bindingExec = attValue;
+      this.parent = parent;
     }
 
     Binding.prototype.init = function() {
@@ -189,21 +272,34 @@
     Binding.prototype.exportValue = function() {};
 
     Binding.prototype.subscribe = function() {
+<<<<<<< HEAD
       var dependency, evt, parts, result, t, _i, _len, _results;
 
+=======
+      var b, dependency, evt, parts, result, t, _i, _len, _results;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       if (this.model.hasProp(this.bindingExec) || this.model.hasCollection(this.bindingExec)) {
         evt = "ModelUpdated:" + (this.model.getClass()) + ":" + this.bindingExec + ":" + (this.model.getID());
         t = (this.element.getAttribute("title")) || "";
         this.element.setAttribute("title", "" + t + "//" + evt);
+<<<<<<< HEAD
         this.model.getController().getEventDispatcher().subscribe(evt, this, function() {
+=======
+        Cydr.EventDispatcher.subscribe(evt, this, function() {
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
           return this.importValue();
         });
-      } else if (!Cydr.prototype.isAnalyzedExpression(this.model.getClass(), this.bindingExec)) {
-        Cydr.prototype.beginAnalysis(this.model.getClass(), this.bindingExec);
-        this.model.exec(this.bindingExec);
-        Cydr.prototype.endAnalysis();
+      } else if (!this.model.isAnalysedExpression(this.bindingExec)) {
+        b = this.bindingExec;
+        this.model.subscribeToEvent("ModelAccessed", function(evt, type, model, prop, id) {
+          return this.pushConfig("analysedExpressions", b, "" + model + ":" + prop + ":" + id);
+        });
+        Cydr.Model.frozen = true;
+        this.executeBindingExpression();
+        Cydr.Model.frozen = false;
+        this.model.revokeSubscription("ModelAccessed");
       }
-      result = this.model.getExpresssionDependencies(this.bindingExec);
+      result = this.model.getDependenciesForExpression(this.bindingExec);
       if (result) {
         _results = [];
         for (_i = 0, _len = result.length; _i < _len; _i++) {
@@ -212,7 +308,8 @@
           evt = "ModelUpdated:" + parts[0] + ":" + parts[1] + ":" + parts[2];
           t = (this.element.getAttribute("title")) || "";
           this.element.setAttribute("title", "" + t + "//" + evt);
-          _results.push(Cydr.prototype.subscribeToEvent(evt, this, function() {
+          console.log("" + this.bindingExec + " will listen to " + evt);
+          _results.push(Cydr.EventDispatcher.subscribe(evt, this, function() {
             return this.importValue();
           }));
         }
@@ -231,14 +328,18 @@
       return new Cydr[this.getClass()](model, element);
     };
 
+<<<<<<< HEAD
     Binding.prototype.getValue = function() {
       return this.executeBindingExpression();
     };
 
+=======
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
     Binding.prototype.executeBindingExpression = function() {
       return this.model.exec(this.bindingExec, this);
     };
 
+<<<<<<< HEAD
     Binding.prototype.getParentBinding = function() {
       var node;
 
@@ -253,6 +354,10 @@
         }
         node = node.parentNode;
       }
+=======
+    Binding.prototype.getValue = function() {
+      return this.executeBindingExpression();
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
     };
 
     return Binding;
@@ -295,7 +400,7 @@
         formData = window.form2object(_this.element);
         func = _this.bindingExec;
         if (typeof _this.model[func] === "function") {
-          return _this.model[func](formData);
+          return _this.model[func](formData, _this.element);
         }
       });
       return SubmitBinding.__super__.init.call(this);
@@ -396,10 +501,20 @@
     }
 
     JSONBinding.prototype.subscribe = function() {
+<<<<<<< HEAD
       var className, dependency, obj, parts, prop, result, _i, _len, _results;
 
       if (!Cydr.prototype.isAnalyzedExpression(this.model.getClass(), this.bindingExec)) {
         Cydr.prototype.beginAnalysis(this.model.getClass(), this.bindingExec);
+=======
+      var b, className, dependency, obj, parts, prop, result, _i, _len, _results;
+      if (!this.model.isAnalysedExpression(this.bindingExec)) {
+        b = this.bindingExec;
+        this.model.subscribeToEvent("ModelAccessed", function(evt, type, model, prop, id) {
+          return this.pushConfig("analysedExpressions", b, "" + model + ":" + prop + ":" + id);
+        });
+        Cydr.Model.frozen = true;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
         obj = this.executeBindingExpression();
         if (typeof obj !== "object") {
           console.error("" + (this.getClass()) + " binding must return a JSON object of classname: property/function pairs.");
@@ -413,15 +528,16 @@
             this.model.exec(prop);
           }
         }
-        Cydr.prototype.endAnalysis();
+        Cydr.Model.frozen = false;
+        this.model.revokeSubscription("ModelAccessed");
       }
-      result = this.model.getExpresssionDependencies(this.bindingExec);
+      result = this.model.getDependenciesForExpression(this.bindingExec);
       if (result) {
         _results = [];
         for (_i = 0, _len = result.length; _i < _len; _i++) {
           dependency = result[_i];
           parts = dependency.split(":");
-          _results.push(Cydr.prototype.subscribeToEvent("ModelUpdated:" + (this.model.getClass()) + ":" + parts[1] + ":" + (this.model.getID()), this, function() {
+          _results.push(Cydr.EventDispatcher.subscribe("ModelUpdated:" + (this.model.getClass()) + ":" + parts[1] + ":" + (this.model.getID()), this, function() {
             return this.importValue();
           }));
         }
@@ -442,11 +558,18 @@
     }
 
     ExtraclassesBinding.prototype.importValue = function() {
+<<<<<<< HEAD
       var cssClass, exec, newClass, result, rx, _ref6;
 
       _ref6 = this.executeBindingExpression();
       for (cssClass in _ref6) {
         exec = _ref6[cssClass];
+=======
+      var cssClass, exec, newClass, result, rx, _ref;
+      _ref = this.executeBindingExpression();
+      for (cssClass in _ref) {
+        exec = _ref[cssClass];
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
         rx = new RegExp("(^|\\s)" + cssClass, "g");
         newClass = this.element.className.replace(rx, "");
         if (typeof exec === "function") {
@@ -565,10 +688,10 @@
 
     LoopBinding.prototype.template = null;
 
-    function LoopBinding(model, element) {
+    function LoopBinding(model, element, parent) {
       this.nodes = [];
       this.modelNodeMap = [];
-      LoopBinding.__super__.constructor.call(this, model, element);
+      LoopBinding.__super__.constructor.call(this, model, element, parent);
     }
 
     LoopBinding.prototype.init = function() {
@@ -655,7 +778,7 @@
             if (typeof n.removeAttribute === "function") {
               n.removeAttribute("cydr-ignore");
             }
-            model.applyBindingsToNode(n);
+            model.applyBindingsToNode(n, _this);
             _results1.push(_this.modelNodeMap[model.getID()].push(n));
           }
           return _results1;
@@ -713,7 +836,11 @@
         dummy.innerHTML = this.caption;
         this.element.appendChild(dummy);
       }
+<<<<<<< HEAD
       list = this.model.executeBindingExpression();
+=======
+      list = this.executeBindingExpression();
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       return list.each(function(model) {
         var opt, val1, val2;
 
@@ -722,11 +849,11 @@
         opt.setAttribute("cydr-attr", "{value: " + _this.valueField + "}");
         val1 = model.exec(_this.valueField);
         val2 = _this.model.exec(val);
-        if (val1.isDataType && val2.isDataType && (val1.getValue() === val2.getValue())) {
+        if (val2 && (val1.isDataType && val2.isDataType) && (val1.getValue() === val2.getValue())) {
           opt.setAttribute("selected", true);
         }
         _this.element.appendChild(opt);
-        return model.applyBindingsToNode(opt);
+        return model.applyBindingsToNode(opt, _this);
       });
     };
 
@@ -849,7 +976,7 @@
     };
 
     Boolean.prototype.getValue = function() {
-      if ((this._value === 1) || (this._value === "1") || (this._value === true)) {
+      if ((this._value === 1) || (this._value === "1") || (this._value === true) || (this._value === "on")) {
         return true;
       }
       return false;
@@ -876,19 +1003,30 @@
 
     Model.prototype._mutatedCollections = {};
 
+<<<<<<< HEAD
     Model.prototype.binding = null;
 
+=======
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
     Model.isModel = true;
 
     Model.prototype.isModel = true;
 
     Model.prototype.collection = null;
 
+<<<<<<< HEAD
     Model.prototype.viewModel = null;
 
     Model.prototype.stat = function(prop) {
       return Cydr[this.getClass()][prop];
     };
+=======
+    Model.prototype.currentBinding = null;
+
+    Model.prototype.viewModel = null;
+
+    Model.frozen = false;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
 
     function Model(data) {
       var f, name, prop, type, val, _ref14, _ref15, _ref16, _ref17, _ref18;
@@ -936,16 +1074,15 @@
     }
 
     Model.prototype.set = function(prop, value) {
-      this._mutatedProperties[prop].setValue(value);
-      if (!Cydr.prototype.isAnalyzing()) {
-        return this.notify(prop);
+      if (Cydr.Model.frozen) {
+        return;
       }
+      this._mutatedProperties[prop].setValue(value);
+      return this.notify(prop);
     };
 
     Model.prototype.obj = function(prop) {
-      if (Cydr.prototype.isAnalyzing()) {
-        Cydr.prototype.registerFunctionDependency(this, prop);
-      }
+      Cydr.EventDispatcher.fire("ModelAccessed:" + (this.getClass()) + ":" + prop + ":" + (this.getID()));
       if ((!this.hasProp(prop)) && (!this.hasCollection(prop)) && (typeof this[prop] === "function")) {
         return this[prop]();
       }
@@ -953,8 +1090,12 @@
     };
 
     Model.prototype.exec = function(exp, binding) {
+<<<<<<< HEAD
       var e, func, result, ret;
 
+=======
+      var func, result, ret;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       ret = this._mutatedProperties[exp] || this._mutatedCollections[exp];
       if (ret) {
         return ret;
@@ -965,9 +1106,16 @@
       if (this.getCachedExpression(exp)) {
         func = this.getCachedExpression(exp);
         try {
+<<<<<<< HEAD
           result = func(this, binding);
         } catch (_error) {
           e = _error;
+=======
+          this.currentBinding = binding;
+          result = func(this, binding);
+          this.currentBinding = null;
+        } catch (e) {
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
           console.log("Could not run expression '" + (func.toString()) + "' on " + (this.getClass()));
           console.log(e.message);
           return new Cydr.DataType("");
@@ -977,6 +1125,7 @@
     };
 
     Model.prototype.getCachedExpression = function(exp) {
+<<<<<<< HEAD
       var body;
 
       if (!Cydr._cachedExpressions[this.getClass()]) {
@@ -985,26 +1134,42 @@
       if (!Cydr._cachedExpressions[this.getClass()][exp]) {
         body = "with(scope) { scope.binding = binding; return " + exp + "; }";
         Cydr._cachedExpressions[this.getClass()][exp] = new Function("scope", "binding", body);
+=======
+      var body, f, ret;
+      if (!this.getConfig("cachedExpressions", exp)) {
+        body = "with(scope) { return " + exp + ";  }";
+        f = new Function("scope", "binding", body);
+        this.pushConfig("cachedExpressions", exp, f);
       }
-      return Cydr._cachedExpressions[this.getClass()][exp];
+      ret = this.getConfig("cachedExpressions", exp);
+      return ret[0];
     };
 
-    Model.prototype.getExpresssionDependencies = function(exp) {
-      return Cydr.prototype.getDependenciesForExpression(this.getClass(), exp);
+    Model.prototype.isAnalysedExpression = function(exp) {
+      if (this.getConfig("analysedExpressions", exp)) {
+        return true;
+      } else {
+        return false;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
+      }
+    };
+
+    Model.prototype.getDependenciesForExpression = function(exp) {
+      return this.getConfig("analysedExpressions", exp);
     };
 
     Model.prototype.get = function(prop) {
-      if (Cydr.prototype.isAnalyzing()) {
-        Cydr.prototype.registerFunctionDependency(this, prop);
-      }
       if (this._mutatedProperties[prop]) {
+        Cydr.EventDispatcher.fire("ModelAccessed:" + (this.getClass()) + ":" + prop + ":" + (this.getID()));
         return this._mutatedProperties[prop].getValue();
       } else if (this._mutatedCollections[prop]) {
+        Cydr.EventDispatcher.fire("ModelAccessed:" + (this.getClass()) + ":" + prop + ":" + (this.getID()));
         return this._mutatedCollections[prop];
       }
     };
 
     Model.prototype.castFunction = function(func) {
+<<<<<<< HEAD
       var dataType, ret;
 
       if (!Cydr.prototype.isAnalyzedFunction(this.getClass(), func)) {
@@ -1012,6 +1177,9 @@
         ret = this[func]();
         Cydr.prototype.endAnalysis();
       }
+=======
+      var dataType;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       if (!ret.isDataType && !ret.isDataList) {
         dataType = this.casting[func] || "Text";
         if (typeof Cydr[dataType] !== "function") {
@@ -1036,10 +1204,18 @@
     };
 
     Model.prototype.Up = function() {
+<<<<<<< HEAD
       return this.binding.getParentBinding();
     };
 
     Model.prototype.bindToElement = function(el, viewModel) {
+=======
+      var _ref, _ref1;
+      return (_ref = this.currentBinding) != null ? (_ref1 = _ref.parent) != null ? _ref1.model : void 0 : void 0;
+    };
+
+    Model.prototype.bindToElement = function(el, parentBinding) {
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       var alpha, att, atts, binding, klass, rx, type, _i, _len, _results;
 
       rx = new RegExp('^cydr-', 'i');
@@ -1052,8 +1228,12 @@
           type = att.name.split("-").pop();
           klass = "" + (type.charAt(0).toUpperCase() + type.slice(1)) + "Binding";
           if (typeof Cydr[klass] === "function") {
+<<<<<<< HEAD
             binding = new Cydr[klass](this, el);
             el.context = this;
+=======
+            binding = new Cydr[klass](this, el, parentBinding);
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
             _results.push(binding.init());
           } else {
             _results.push(void 0);
@@ -1065,7 +1245,11 @@
       return _results;
     };
 
+<<<<<<< HEAD
     Model.prototype.applyBindingsToNode = function(node, viewModel) {
+=======
+    Model.prototype.applyBindingsToNode = function(node, parentBinding) {
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       var att, atts, el, els, n, nl, rx, stack, _i, _len, _results;
 
       stack = [node];
@@ -1094,7 +1278,7 @@
             for (_j = 0, _len1 = atts.length; _j < _len1; _j++) {
               att = atts[_j];
               if (rx.test(att.name)) {
-                this.bindToElement(el);
+                this.bindToElement(el, parentBinding);
                 break;
               } else {
                 _results1.push(void 0);
@@ -1110,7 +1294,11 @@
     };
 
     Model.prototype.notify = function(prop) {
+<<<<<<< HEAD
       Cydr.prototype.getEventDispatcher().fire("ModelUpdated:" + (this.getClass()) + ":" + prop + ":" + (this.getID()));
+=======
+      Cydr.EventDispatcher.fire("ModelUpdated:" + (this.getClass()) + ":" + prop + ":" + (this.getID()));
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       if (this.collection) {
         return this.collection.notify();
       }
@@ -1120,12 +1308,41 @@
       return this.collection = collection;
     };
 
+<<<<<<< HEAD
     Model.prototype.setViewModel = function(vm) {
       return this.viewModel = vm;
     };
 
     Model.prototype.getViewModel = function() {
       return this.viewModel || this;
+=======
+    Model.prototype.getCollection = function() {
+      return this.collection;
+    };
+
+    Model.prototype.getViewModel = function() {
+      var m;
+      if (this.viewModel) {
+        return this.viewModel;
+      }
+      m = this;
+      while (true) {
+        if (!m.getCollection()) {
+          break;
+        }
+        m = m.getCollection().getOwner();
+      }
+      this.viewModel = m;
+      return this.viewModel;
+    };
+
+    Model.prototype.subscribeToEvent = function(evt, func) {
+      return Cydr.EventDispatcher.subscribe(evt, this, func);
+    };
+
+    Model.prototype.revokeSubscription = function(evt) {
+      return Cydr.EventDispatcher.revoke(evt, this);
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
     };
 
     return Model;
@@ -1170,8 +1387,10 @@
     };
 
     Collection.prototype.push = function(model) {
-      this._records.push(model);
-      return this.owner.notify(this.name);
+      if (!Cydr.Model.frozen) {
+        this._records.push(model);
+        return this.owner.notify(this.name);
+      }
     };
 
     Collection.prototype.pushMany = function(items) {
@@ -1180,11 +1399,17 @@
       if (items == null) {
         items = [];
       }
-      for (_i = 0, _len = items.length; _i < _len; _i++) {
-        i = items[_i];
-        this._records.push(i);
+      if (!Cydr.Model.frozen) {
+        for (_i = 0, _len = items.length; _i < _len; _i++) {
+          i = items[_i];
+          this._records.push(i);
+        }
+        return this.owner.notify(this.name);
       }
-      return this.owner.notify(this.name);
+    };
+
+    Collection.prototype.getOwner = function() {
+      return this.owner;
     };
 
     return Collection;
@@ -1271,8 +1496,12 @@
       if (this.sortField) {
         this.resultSet = this.resultSet.sort(function(a, b) {
           var A, B, ret, reverse;
+<<<<<<< HEAD
 
           reverse = _this.sortDir === "DESC" ? true : false;
+=======
+          reverse = _this.sortDir === "ASC" ? true : false;
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
           A = a.obj(_this.sortField).renderSortable();
           B = b.obj(_this.sortField).renderSortable();
           if (A < B) {
@@ -1330,6 +1559,7 @@
   })(Cydr.Object);
 
   Cydr.ViewModel = (function(_super) {
+<<<<<<< HEAD
     __extends(ViewModel, _super);
 
     ViewModel.prototype._eventDispatcher = null;
@@ -1342,6 +1572,17 @@
       if (node) {
         node.parent = this;
         this.applyBindingsToNode(node, this);
+=======
+
+    __extends(ViewModel, _super);
+
+    function ViewModel(selector) {
+      var node;
+      ViewModel.__super__.constructor.call(this);
+      node = document.querySelector(selector);
+      if (node) {
+        this.applyBindingsToNode(node);
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
       }
     }
 

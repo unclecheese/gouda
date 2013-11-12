@@ -48,11 +48,18 @@
         result = this.Todos().get().filter("Category", this.get("CategoryFilter"));
         return result;
       }
-      return this.Todos().get();
+      return this.Todos().get().sort("Title", "ASC");
     };
 
     TestApp.prototype.CompetedTodos = function() {
       return this.Todos().get().filter("IsDone", true);
+    };
+
+    TestApp.prototype.CreateTodo = function(formdata, element) {
+      if (element) {
+        element.Title.value = "";
+      }
+      return this.Todos().push(new Todo(formdata));
     };
 
     return TestApp;
@@ -166,7 +173,10 @@
       });
       it("Has a two-way 'value' binding", function() {
         var e;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
         App.set("FirstName", "Bob");
         expect($("input[cydr-value='FirstName']").val()).toEqual("Bob");
         expect($("[cydr-content='FirstName']").html()).toEqual("Bob");
@@ -180,7 +190,10 @@
       });
       it("Has a two-way 'checked' binding", function() {
         var e;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
         App.set("IsMember", true);
         expect($("input[cydr-checked='IsMember']")).toBeChecked();
         e = document.createEvent("HTMLEvents");
@@ -200,7 +213,10 @@
       });
       it("Has a click binding", function() {
         var e;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
         e = document.createEvent("MouseEvents");
         e.initEvent("click");
         $('[cydr-click]')[0].dispatchEvent(e);
@@ -243,7 +259,10 @@
         });
         return it("Will apply bindings to nodes in a loop", function() {
           var $todo4, $todo5;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8227c9728629c840b26ee8f217ecbb003fc8585d
           App.get("Todos").push(new Todo({
             Title: "Todo4",
             IsDone: false,

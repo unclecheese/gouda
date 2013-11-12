@@ -29,10 +29,14 @@ class @TestApp extends Cydr.ViewModel
 		if @get("CategoryFilter").length
 			result = @Todos().get().filter "Category", @get "CategoryFilter"
 			return result
-		@Todos().get()
+		@Todos().get().sort("Title", "ASC")
 
 	CompetedTodos: ->
-		@Todos().get().filter "IsDone", true
+		@Todos().get().filter("IsDone", true)
+
+	CreateTodo: (formdata, element) ->
+		element.Title.value = "" if element
+		@Todos().push(new Todo(formdata))
 
 class @Todo extends Cydr.Model
 
