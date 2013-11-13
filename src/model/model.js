@@ -1,5 +1,7 @@
 define(['core','datatypes/datatype','model/collection','object'],
-  function(Cydr, DataType, Collection, CydrObject) {
+  function(Core, DataType, Collection, CydrObject) {
+
+  var Cydr = require('cydr');
 
   Model = CydrObject.extend({
 
@@ -33,9 +35,11 @@ define(['core','datatypes/datatype','model/collection','object'],
         this._mutatedProperties = {};
         this._mutatedCollections = {};
 
-        Cydr.Utils.forEach(this.properties, function (name, type) {
-          console.log(Cydr);
+        Core.Utils.forEach(this.properties, function (name, type) {
           if (!Cydr[type] || !Cydr[type].prototype.isDataType) {
+            console.log(type);
+            console.log(Cydr);
+            console.log(Cydr[type]);
             throw new Error("DataType '" + type + "' does not exist!");
             return false;
           }
@@ -44,7 +48,7 @@ define(['core','datatypes/datatype','model/collection','object'],
           this[name] = f.bind(this);
         }, this);
 
-        Cydr.Utils.forEach(this.has_many, function (name, type) {
+        Core.Utils.forEach(this.has_many, function (name, type) {
           if (!window[type] || !window[type].prototype.isModel) {
             throw new Error("Model '" + type + "' does not exist!");
             return false;
@@ -54,13 +58,13 @@ define(['core','datatypes/datatype','model/collection','object'],
           this[name] = f.bind(this);
         }, this);
 
-        Cydr.Utils.forEach(this.defaults, function (prop, val) {
+        Core.Utils.forEach(this.defaults, function (prop, val) {
           if(this.hasProp(prop)) {
             this._mutatedProperties[prop].setValue(val);
           }
         }, this);
 
-        Cydr.Utils.forEach(data, function (prop, val) {
+        Core.Utils.forEach(data, function (prop, val) {
           if (this.hasProp(prop)) {
             this._mutatedProperties[prop].setValue(val);
           }
@@ -76,7 +80,7 @@ define(['core','datatypes/datatype','model/collection','object'],
     },
 
     set: function (prop, value) {
-      if(Cydr.Model.prototype.frozen) {return;}
+      if(Model.prototype.frozen) {return;}
 
       this._mutatedProperties[prop].setValue(value);
       this.notify(prop);
@@ -84,7 +88,7 @@ define(['core','datatypes/datatype','model/collection','object'],
 
 
     obj: function (prop) {
-      Cydr.EventDispatcher.fire("ModelAccessed:"+this.getClass()+":"+prop+":"+this.getID());
+      Core.EventDispatcher.fire("ModelAccessed:"+this.getClass()+":"+prop+":"+this.getID());
       if ( (!this.hasProp(prop)) && (!this.hasCollection(prop)) && (typeof this[prop] == "function")) {
         return this[prop]();
       }
@@ -110,7 +114,7 @@ define(['core','datatypes/datatype','model/collection','object'],
         } catch (e) {
           console.error("Could not run expression '" + func.toString() + "'");
           console.log(e.message);
-          return new Cydr.DataType("");
+          return new DataType("");
         }
         return result;
       }
@@ -139,11 +143,11 @@ define(['core','datatypes/datatype','model/collection','object'],
 
     get: function (prop) {
       if(this._mutatedProperties[prop]) {
-        Cydr.EventDispatcher.fire("ModelAccessed:"+this.getClass()+":"+prop+":"+this.getID());
+        Core.EventDispatcher.fire("ModelAccessed:"+this.getClass()+":"+prop+":"+this.getID());
         return this._mutatedProperties[prop].getValue();
       }
       else if(this._mutatedCollections[prop]) {
-        Cydr.EventDispatcher.fire("ModelAccessed:"+this.getClass()+":"+prop+":"+this.getID());
+        Core.EventDispatcher.fire("ModelAccessed:"+this.getClass()+":"+prop+":"+this.getID());
         return this._mutatedCollections[prop];
       }
     },
@@ -187,7 +191,7 @@ define(['core','datatypes/datatype','model/collection','object'],
       var rx = new RegExp('^cydr-', 'i');
       var alpha = new RegExp('^[a-z0-9_]+$', 'i');
       var atts = el.attributes || []
-      Cydr.Utils.forEach(atts, function (i, att) {
+      Core.Utils.forEach(atts, function (i, att) {
         if (rx.test(att.name)) {
           var type = att.name.split("-").pop();
           var klass = type.charAt(0).toUpperCase() + type.slice(1) + "Binding";
@@ -211,7 +215,7 @@ define(['core','datatypes/datatype','model/collection','object'],
 
       els.unshift(node);
       var rx = new RegExp('^cydr-', 'i');
-      Cydr.Utils.forEach(els, function (i, el) {
+      Core.Utils.forEach(els, function (i, el) {
         var atts = (el && el.attributes) ? el.attributes : [];
         if (el && typeof el.getAttribute == "function" && !el.getAttribute("cydr-ignore")) {
           for (att in atts) {
@@ -225,7 +229,7 @@ define(['core','datatypes/datatype','model/collection','object'],
     },
 
     notify: function (prop) {
-      Cydr.EventDispatcher.fire("ModelUpdated:" + this.getClass() + ":" + prop + ":" + this.getID());
+      Core.EventDispatcher.fire("ModelUpdated:" + this.getClass() + ":" + prop + ":" + this.getID());
       if (this.collection) {
         this.collection.notify();
       }
@@ -254,13 +258,13 @@ define(['core','datatypes/datatype','model/collection','object'],
     },
 
     subscribeToEvent: function(evt, func) {
-      Cydr.EventDispatcher.subscribe(evt, this, func);
+      Core.EventDispatcher.subscribe(evt, this, func);
     },
 
     revokeSubscription: function(evt) {
-      Cydr.EventDispatcher.revoke(evt, this);
+      Core.EventDispatcher.revoke(evt, this);
     }
   });
-
+  
   return Model;
 });

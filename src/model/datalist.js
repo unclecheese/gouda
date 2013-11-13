@@ -1,4 +1,4 @@
-define(['core','object'], function(Cydr, CydrObject) {
+define(['core','object'], function(Core, CydrObject) {
 
   DataList = CydrObject.extend({
 
@@ -58,14 +58,14 @@ define(['core','object'], function(Cydr, CydrObject) {
 
     execute: function () {
       if (this.filters.length) {
-        Cydr.Utils.forEach(this.filters, function (i, filterData) {
+        Core.Utils.forEach(this.filters, function (i, filterData) {
           var parts = filterData.filter.split(":");
           var field = parts[0];
           var operator = parts[1];
           if (!operator) operator = "EqualTo";
           switch (operator) {
           case "EqualTo":
-            Cydr.Utils.forEach(this._items, function (index, i) {
+            Core.Utils.forEach(this._items, function (index, i) {
               if (i.get(field) == filterData.value) {
                 this.resultSet.push(i);
               }
@@ -98,7 +98,7 @@ define(['core','object'], function(Cydr, CydrObject) {
         this.resultSet = this.resultSet.slice(0, this.limitNumber);
       }
 
-      Cydr.Utils.forEach(this.resultSet, function (i, model) {
+      Core.Utils.forEach(this.resultSet, function (i, model) {
         model.setCollection(this.collection);
       }, this);
 

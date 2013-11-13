@@ -1,4 +1,4 @@
-define(['model/model','core','bindings/binding'], function(Model, Cydr, Binding) {
+define(['model/model','core','bindings/binding'], function(Model, Core, Binding) {
   
   JSONBinding = Binding.extend({
 
@@ -16,7 +16,7 @@ define(['model/model','core','bindings/binding'], function(Model, Cydr, Binding)
           console.error(this.getClass() + " binding must return a JSON object of classname: property/function pairs.");
           return;
         }
-        Cydr.Utils.forEach(obj, function(className, prop) {
+        Core.Utils.forEach(obj, function(className, prop) {
           if(typeof prop == "function") {
             prop();
           }
@@ -32,7 +32,7 @@ define(['model/model','core','bindings/binding'], function(Model, Cydr, Binding)
         for(i in result) {
           var dependency = result[i];
           var parts = dependency.split(":");
-          Cydr.EventDispatcher.subscribe("ModelUpdated:"+this.model.getClass()+":"+parts[1]+":"+this.model.getID(), this, function() {
+          Core.EventDispatcher.subscribe("ModelUpdated:"+this.model.getClass()+":"+parts[1]+":"+this.model.getID(), this, function() {
             this.importValue();
           });
         }

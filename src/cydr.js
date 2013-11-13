@@ -1,73 +1,31 @@
-define([
-
-  'model/model',
-  'model/collection',
-  'model/datalist',
-  'model/viewmodel',
-
-  'datatypes/bool',
-  'datatypes/htmltext',
-  'datatypes/plaintext',
-
-  'bindings/checked',
-  'bindings/click',
-  'bindings/content',
-  'bindings/hidden',
-  'bindings/visible',
-  'bindings/submit',
-  'bindings/value',
-  'bindings/json/attr',
-  'bindings/json/extraclasses',
-  'bindings/loop/loop',
-  'bindings/loop/options'
-
-
-], function(
-
-	Model,
-	Collection,
-	DataList,
-	ViewModel,
-
-	Bool,
-	HTMLText,
-	Text,
-
-	CheckedBinding,
-	ClickBinding,
-	ContentBinding,
-	HiddenBinding,
-	VisibleBinding,
-	SubmitBinding,
-	ValueBinding,
-	AttrBinding,
-	ExtraclassesBinding,
-	LoopBinding,
-	OptionsBinding
-
-) {
+define(function(require, exports, module) {
+	
 	var Cydr = {};
 
-	Cydr.Model = Model;
-	Cydr.Collection = Collection;
-	Cydr.DataList = DataList;
-	Cydr.ViewModel = ViewModel;
+	Cydr.Collection 			= require('model/collection');
+	Cydr.Model 					= require('model/model');
+	Cydr.DataList 				= require('model/datalist');
+	Cydr.ViewModel 				= require('model/viewmodel');
 
-	Cydr.Bool = Bool;
-	Cydr.HTMLText = HTMLText;
-	Cydr.Text = Text;
+	Cydr.Boolean				= require('datatypes/bool');
+	Cydr.HTMLText 				= require('datatypes/htmltext');
+	Cydr.Text	 				= require('datatypes/plaintext');
 
-	Cydr.CheckedBinding = CheckedBinding;
-	Cydr.ClickBinding = ClickBinding;
-	Cydr.ContentBinding = ContentBinding;
-	Cydr.HiddenBinding = HiddenBinding;
-	Cydr.VisibleBinding = VisibleBinding;
-	Cydr.SubmitBinding = SubmitBinding;
-	Cydr.ValueBinding = ValueBinding;
-	Cydr.AttrBinding = AttrBinding;
-	Cydr.ExtraclassesBinding = ExtraclassesBinding;
-	Cydr.LoopBinding = LoopBinding;
-	Cydr.OptionsBinding = OptionsBinding;
+	Cydr.CheckedBinding 		= require('bindings/checked');
+	Cydr.ClickBinding 			= require('bindings/click');
+	Cydr.ContentBinding 		= require('bindings/content');
+	Cydr.HiddenBinding 			= require('bindings/hidden');
+	Cydr.VisibleBinding 		= require('bindings/visible');
+	Cydr.SubmitBinding 			= require('bindings/submit');
+	Cydr.ValueBinding 			= require('bindings/value');
+	Cydr.AttrBinding 			= require('bindings/json/attr');
+	Cydr.ExtraclassesBinding 	= require('bindings/json/extraclasses');
+	Cydr.LoopBinding 			= require('bindings/loop/loop');
+	Cydr.OptionsBinding 		= require('bindings/loop/options');
 
+	for(i in Cydr) {
+		exports[i] = Cydr[i];
+	}
 	return Cydr;
+
 });

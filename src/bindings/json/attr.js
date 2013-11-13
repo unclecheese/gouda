@@ -1,4 +1,4 @@
-define(['core','bindings/json/json'], function(Cydr, JSONBinding) {
+define(['core','bindings/json/json'], function(Core, JSONBinding) {
   
   AttrBinding = JSONBinding.extend({
 
@@ -8,7 +8,7 @@ define(['core','bindings/json/json'], function(Cydr, JSONBinding) {
       if (typeof this.getValue() != "object") {
         console.error(this.getClass() + " binding must return a JSON object of attribute-name: property/function pairs.");
       }
-      Cydr.Utils.forEach(this.getValue(), function (attribute, exec) {
+      Core.Utils.forEach(this.getValue(), function (attribute, exec) {
         if (typeof exec == "function") {
           this.element.setAttribute(attribute, exec());
         }

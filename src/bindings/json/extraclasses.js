@@ -1,11 +1,11 @@
-define(['core','bindings/json/json'], function(Cydr, JSONBinding) {
+define(['core','bindings/json/json'], function(Core, JSONBinding) {
   
   ExtraclassesBinding = JSONBinding.extend({
 
     _className: "ExtraclassesBinding",
 
     importValue: function () {
-      Cydr.Utils.forEach(this.executeBindingExpression(), function (cssClass, exec) {
+      Core.Utils.forEach(this.executeBindingExpression(), function (cssClass, exec) {
         var rx = new RegExp("(^|\\s)" + cssClass, "g");
         var newClass = this.element.className.replace(rx, "");
         if (typeof exec == "function") {

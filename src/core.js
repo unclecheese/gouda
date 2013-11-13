@@ -1,10 +1,10 @@
 define([], function() {
 
-  var Cydr = {};
+  var Core = {};
 
-  Cydr.Config = {};
+  Core.Config = {};
 
-  Cydr.Utils = {
+  Core.Utils = {
 
     inArray: function (needle, heystack) {
       for (i in heystack) {
@@ -25,7 +25,7 @@ define([], function() {
   };
 
 
-  Cydr.EventDispatcher = {
+  Core.EventDispatcher = {
 
     events: [],
 
@@ -40,8 +40,8 @@ define([], function() {
         var part = parts[i];
         evt.push(part);
         e = evt.join(":");
-        var subscribers = (Cydr.EventDispatcher.events[e]) || [];
-        Cydr.Utils.forEach(subscribers, function(listenerID, func) {
+        var subscribers = (Core.EventDispatcher.events[e]) || [];
+        Core.Utils.forEach(subscribers, function(listenerID, func) {
           func(e, type, model, prop, id);
         });
       }
@@ -50,21 +50,21 @@ define([], function() {
 
 
     subscribe: function (sku, listener, func) {
-      if(!Cydr.EventDispatcher.events[sku]) {
-        Cydr.EventDispatcher.events[sku] = []
+      if(!Core.EventDispatcher.events[sku]) {
+        Core.EventDispatcher.events[sku] = []
       }
-      Cydr.EventDispatcher.events[sku]["listener_"+listener.__ID__] = func.bind(listener);
+      Core.EventDispatcher.events[sku]["listener_"+listener.__ID__] = func.bind(listener);
     },
 
     revoke: function (sku, listener) {
-      delete Cydr.EventDispatcher.events[sku]["listener_"+listener.__ID__];
-      if(Cydr.EventDispatcher.events[sku].length === 0) {
-        delete Cydr.EventDispatcher.events[sku];
+      delete Core.EventDispatcher.events[sku]["listener_"+listener.__ID__];
+      if(Core.EventDispatcher.events[sku].length === 0) {
+        delete Core.EventDispatcher.events[sku];
       }
     }
 
 
   };
 
-  return Cydr;
+  return Core;
 });

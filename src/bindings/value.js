@@ -1,4 +1,4 @@
-define(['core','bindings/binding'], function(Cydr, Binding) {
+define(['core','bindings/binding'], function(Core, Binding) {
 
   ValueBinding = Binding.extend({
 
@@ -12,7 +12,7 @@ define(['core','bindings/binding'], function(Cydr, Binding) {
       if (this.element.tagName == "INPUT") {
         this.element.value = this.getValue();
       } else if (this.element.tagName == "SELECT") {
-        Cydr.Utils.forEach(this.element.options, function (key, opt) {
+        Core.Utils.forEach(this.element.options, function (key, opt) {
           if (opt.value == this.getValue().toString()) {
             opt.selected = true;
             return false;

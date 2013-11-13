@@ -1,6 +1,6 @@
-define(['core','object'], function(Cydr, CydrObject) {
+define(['core','object','model/model'], function(Core, CoreObject, Model) {
 
-  Binding = CydrObject.extend({
+  Binding = CoreObject.extend({
 
     _className: "Binding",
 
@@ -33,7 +33,7 @@ define(['core','object'], function(Cydr, CydrObject) {
 
 
     initialize: function () {
-      if (this.allowedTags.length && !Cydr.Utils.inArray(this.element.tagName, this.allowedTags)) {
+      if (this.allowedTags.length && !Core.Utils.inArray(this.element.tagName, this.allowedTags)) {
         console.error(this.getBindingAttribute() + "binding must be on one of the following tags: " + this.allowedTags.join(',') + ".");
       }
       if (this.exportValueEvent) {
@@ -56,7 +56,7 @@ define(['core','object'], function(Cydr, CydrObject) {
         var evt = "ModelUpdated:" + this.model.getClass() + ":" + this.bindingExec + ":" + this.model.getID();
         var t = (this.element.getAttribute("title")) || "";
         this.element.setAttribute("title", t + "//" + evt);
-        Cydr.EventDispatcher.subscribe(evt, this, function () {
+        Core.EventDispatcher.subscribe(evt, this, function () {
           this.importValue();
         });
       } else if (!this.model.isAnalysedExpression(this.bindingExec)) {
@@ -64,20 +64,20 @@ define(['core','object'], function(Cydr, CydrObject) {
         this.model.subscribeToEvent("ModelAccessed", function (evt, type, model, prop, id) {
           this.pushConfig("analysedExpressions", b, model+":"+prop+":"+id);
         });
-        Cydr.Model.prototype.frozen = true;
+        Model.prototype.frozen = true;
         this.executeBindingExpression();
-        Cydr.Model.prototype.frozen = false;
+        Model.prototype.frozen = false;
         this.model.revokeSubscription("ModelAccessed");
       }
 
       var result = this.model.getDependenciesForExpression(this.bindingExec);
       if (result) {
-        Cydr.Utils.forEach(result, function (key, val) {
+        Core.Utils.forEach(result, function (key, val) {
           var parts = val.split(":");
           var evt = "ModelUpdated:" + parts[0] + ":" + parts[1] + ":" + parts[2];
           var t = (this.element.getAttribute("title")) || "";
           this.element.setAttribute("title", t + "//" + evt);
-          Cydr.EventDispatcher.subscribe(evt, this, function () {
+          Core.EventDispatcher.subscribe(evt, this, function () {
             this.importValue();
           });
         }, this);
@@ -91,7 +91,7 @@ define(['core','object'], function(Cydr, CydrObject) {
 
 
     create: function (model, element) {
-      return new Cydr[this.getClass()](model, element);
+      return new Core[this.getClass()](model, element);
     },
 
 
