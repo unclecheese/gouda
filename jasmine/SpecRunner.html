@@ -14,8 +14,14 @@
 
   <script type="text/javascript" src="lib/jasmine-jquery.js"></script>
 
-  <script type="text/javascript" src="../require.js" data-main="../require-config"></script>  
-  <script type="text/javascript" src="../spec.js"></script>
+  <script type="text/javascript" src="require.js"></script>
+  <script>
+  require.config({
+    baseUrl: "../src/",
+    urlArgs: "v=" +  (new Date()).getTime()
+  });
+  </script>
+  <script type="text/javascript" src="spec.js"></script>
 
   <script type="text/javascript">
     (function() {

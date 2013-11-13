@@ -1,5 +1,5 @@
-define(['core','model/datatypes/datatype','model/collection','model/model','object'], 
-  function(Cydr, DataType, Collection, Model, CydrObject) {
+define(['core','datatypes/datatype','model/collection','object'],
+  function(Cydr, DataType, Collection, CydrObject) {
 
   Model = CydrObject.extend({
 
@@ -34,6 +34,7 @@ define(['core','model/datatypes/datatype','model/collection','model/model','obje
         this._mutatedCollections = {};
 
         Cydr.Utils.forEach(this.properties, function (name, type) {
+          console.log(Cydr);
           if (!Cydr[type] || !Cydr[type].prototype.isDataType) {
             throw new Error("DataType '" + type + "' does not exist!");
             return false;

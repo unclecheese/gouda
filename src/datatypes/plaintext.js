@@ -1,6 +1,6 @@
 define(['datatypes/datatype'], function(DataType) {
 
-	PlainText = DataType.extend({
+	Text = DataType.extend({
 
 	  _className: "Text",
 
@@ -21,5 +21,5 @@ define(['datatypes/datatype'], function(DataType) {
 
 	});
 
-	return PlainText;
+	return Text;
 });

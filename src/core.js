@@ -1,5 +1,5 @@
 define([], function() {
-  
+
   var Cydr = {};
 
   Cydr.Config = {};

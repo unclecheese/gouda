@@ -1,4 +1,5 @@
 define([], function() {
+
   var initializing = false;
   var classCounter = 0;
 
@@ -44,5 +45,8 @@ define([], function() {
     Class.extend = arguments.callee;
 
     return Class;
+
   };
+
+  return Class;
 });

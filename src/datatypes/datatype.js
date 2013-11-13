@@ -1,5 +1,5 @@
 define(['object'], function(CydrObject) {
-  
+
   DataType = CydrObject.extend({
 
     _className: "DataType",
@@ -10,7 +10,7 @@ define(['object'], function(CydrObject) {
 
     __construct: function (val) {
       this._super();
-      this._value = val ? val : "";
+      this._value = val || "";
     },
 
     setValue: function (val) {
@@ -22,8 +22,8 @@ define(['object'], function(CydrObject) {
     },
 
     isFalsy: function () {
-      if (!this._value || this._value == "undefined") {
-        return true
+      if (!this._value || this._value === "undefined") {
+        return true;
       }
       return this._value.length === 0;
     },

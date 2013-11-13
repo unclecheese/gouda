@@ -1,4 +1,5 @@
 define([
+
   'model/model',
   'model/collection',
   'model/datalist',
@@ -22,6 +23,7 @@ define([
 
 
 ], function(
+
 	Model,
 	Collection,
 	DataList,
@@ -29,7 +31,7 @@ define([
 
 	Bool,
 	HTMLText,
-	PlainText,
+	Text,
 
 	CheckedBinding,
 	ClickBinding,
@@ -44,7 +46,6 @@ define([
 	OptionsBinding
 
 ) {
-
 	var Cydr = {};
 
 	Cydr.Model = Model;
@@ -54,7 +55,7 @@ define([
 
 	Cydr.Bool = Bool;
 	Cydr.HTMLText = HTMLText;
-	Cydr.PlainText = PlainText;
+	Cydr.Text = Text;
 
 	Cydr.CheckedBinding = CheckedBinding;
 	Cydr.ClickBinding = ClickBinding;
