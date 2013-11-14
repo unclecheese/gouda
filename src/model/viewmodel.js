@@ -1,5 +1,5 @@
 define(['model/model'], function(Model) {
-	
+
 	ViewModel = Model.extend({
 
 	  _className: "ViewModel",
@@ -11,7 +11,7 @@ define(['model/model'], function(Model) {
 	      this.applyBindingsToNode(node);
 	    }
 	  }
-	});	
+	});
 
 	return ViewModel;
 });

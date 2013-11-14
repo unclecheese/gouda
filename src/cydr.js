@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-	
+
 	var Cydr = {};
 
 	Cydr.Collection 			= require('model/collection');
@@ -23,9 +23,10 @@ define(function(require, exports, module) {
 	Cydr.LoopBinding 			= require('bindings/loop/loop');
 	Cydr.OptionsBinding 		= require('bindings/loop/options');
 
-	for(i in Cydr) {
-		exports[i] = Cydr[i];
-	}
+	Cydr.Model.Cydr = Cydr;
+	Cydr.Model.Collection = Cydr.Collection;
+	Cydr.Collection.Model = Cydr.Model;
+
 	return Cydr;
 
 });

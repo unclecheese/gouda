@@ -1,7 +1,8 @@
 define(['core','datatypes/datatype','model/collection','object'],
   function(Core, DataType, Collection, CydrObject) {
 
-  var Cydr = require('cydr');
+
+
 
   Model = CydrObject.extend({
 
@@ -34,26 +35,18 @@ define(['core','datatypes/datatype','model/collection','object'],
         this._super();
         this._mutatedProperties = {};
         this._mutatedCollections = {};
-
         Core.Utils.forEach(this.properties, function (name, type) {
-          if (!Cydr[type] || !Cydr[type].prototype.isDataType) {
-            console.log(type);
-            console.log(Cydr);
-            console.log(Cydr[type]);
+          if (!Model.Cydr[type] || !Model.Cydr[type].prototype.isDataType) {
             throw new Error("DataType '" + type + "' does not exist!");
             return false;
           }
-          this._mutatedProperties[name] = new Cydr[type]()
+          this._mutatedProperties[name] = new Model.Cydr[type]()
           var f = new Function("return this.obj('" + name + "');");
           this[name] = f.bind(this);
         }, this);
 
         Core.Utils.forEach(this.has_many, function (name, type) {
-          if (!window[type] || !window[type].prototype.isModel) {
-            throw new Error("Model '" + type + "' does not exist!");
-            return false;
-          }
-          this._mutatedCollections[name] = new Collection(this, type, name);
+          this._mutatedCollections[name] = new Model.Collection(this, type, name);
           var f = new Function("return this.get('" + name + "');");
           this[name] = f.bind(this);
         }, this);
@@ -155,11 +148,11 @@ define(['core','datatypes/datatype','model/collection','object'],
     castFunction: function (func) {
       if(!ret.isDataType && !ret.isDataList) {
         var dataType = this.casting[func] || "Text";
-        if(typeof Cydr[dataType] != "function") {
+        if(typeof Model.Cydr[dataType] != "function") {
           console.error("Tried to cast "+func+" as "+dataType+", but that datatype doesn't exist.");
           return;
         }
-        return new Cydr[dataType](ret);
+        return new Model.Cydr[dataType](ret);
       }
 
       return ret;
@@ -195,8 +188,8 @@ define(['core','datatypes/datatype','model/collection','object'],
         if (rx.test(att.name)) {
           var type = att.name.split("-").pop();
           var klass = type.charAt(0).toUpperCase() + type.slice(1) + "Binding";
-          if (typeof Cydr[klass] == "function" && Cydr[klass].prototype.isDataBinding) {
-            var binding = new Cydr[klass](this, el, parentBinding);
+          if (typeof Model.Cydr[klass] == "function" && Model.Cydr[klass].prototype.isDataBinding) {
+            var binding = new Model.Cydr[klass](this, el, parentBinding);
             binding.initialize();
           }
         }
@@ -265,6 +258,8 @@ define(['core','datatypes/datatype','model/collection','object'],
       Core.EventDispatcher.revoke(evt, this);
     }
   });
-  
+
+
+
   return Model;
 });

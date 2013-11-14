@@ -42,6 +42,9 @@ define([], function() {
         e = evt.join(":");
         var subscribers = (Core.EventDispatcher.events[e]) || [];
         Core.Utils.forEach(subscribers, function(listenerID, func) {
+          if(prop == "CategoryFilter") {
+            console.log("firing", e);
+          }
           func(e, type, model, prop, id);
         });
       }

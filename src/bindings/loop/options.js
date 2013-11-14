@@ -1,5 +1,4 @@
-define(['bindings/loop/loop'], function(LoopBinding) {
-  
+define(['core','bindings/loop/loop'], function(Core, LoopBinding) {
   OptionsBinding = LoopBinding.extend({
 
     _className: "OptionsBinding",
@@ -30,6 +29,7 @@ define(['bindings/loop/loop'], function(LoopBinding) {
       }
       this.subscribe();
       this.importValue();
+
     },
 
 
@@ -47,6 +47,7 @@ define(['bindings/loop/loop'], function(LoopBinding) {
       }
       var list = this.executeBindingExpression();
       var self = this;
+      var originalOptions = self.element.childNodes;
       list.each(function (model) {
         var opt = document.createElement("option");
         opt.setAttribute("cydr-content", self.textField);

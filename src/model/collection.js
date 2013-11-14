@@ -1,5 +1,6 @@
 define(['object', 'model/datalist', 'model/model'], function(CydrObject, DataList, Model) {
 
+
   Collection = CydrObject.extend({
 
     _className: "Collection",
@@ -43,20 +44,18 @@ define(['object', 'model/datalist', 'model/model'], function(CydrObject, DataLis
       this.owner.notify(this.name);
     },
 
-
     pushMany: function (items) {
       if(Model.prototype.frozen) return;
 
-
       if (!items) items = [];
+
       for(i in items) {
         this._records.push(items[i]);
       }
       this.owner.notify(this.name);
     },
 
-
-    getOwner: function() {
+    getOwner: function () {
       return this.owner;
     }
 

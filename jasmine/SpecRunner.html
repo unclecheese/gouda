@@ -23,33 +23,6 @@
   </script>
   <script type="text/javascript" src="spec.js"></script>
 
-  <script type="text/javascript">
-    (function() {
-      var jasmineEnv = jasmine.getEnv();
-      jasmineEnv.updateInterval = 1000;
-
-      var htmlReporter = new jasmine.HtmlReporter();
-
-      jasmineEnv.addReporter(htmlReporter);
-
-      jasmineEnv.specFilter = function(spec) {
-        return htmlReporter.specFilter(spec);
-      };
-
-      var currentWindowOnload = window.onload;
-
-      window.onload = function() {
-        if (currentWindowOnload) {
-          currentWindowOnload();
-        }
-        execJasmine();
-      };
-      function execJasmine() {
-        jasmineEnv.execute();
-      }
-
-    })();
-  </script>
 
 </head>
 
@@ -87,7 +60,7 @@
   </div>
   <div style="float:left;width:300px">
   Filter by category:
-    <select id="optionsbinding" cydr-options="Categories" cydr-optiontext="Title" cydr-optionvalue="Title" cydr-value="CategoryFilter"></select>
+    <select id="optionsbinding" cydr-optionscaption="-- Please select --" cydr-options="Categories" cydr-optiontext="Title" cydr-optionvalue="Title" cydr-value="CategoryFilter"></select>
     (<span cydr-content="CategoryFilter"></span>)
     <ul id="fiteredtodoloop" cydr-loop="FilteredTodos">
       <li><i cydr-content="Title"></i> <i cydr-content="Category"></i></li>

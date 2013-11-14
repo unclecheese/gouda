@@ -98,6 +98,7 @@ define(['bindings/binding'], function(Binding) {
     },
 
     importValue: function () {
+      console.log("importing");
       this.clearContents();
       var list = this.executeBindingExpression();
       var self = this;
