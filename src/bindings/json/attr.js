@@ -1,7 +1,7 @@
 define(['../../core/core','./json'], function(Core, JSONBinding) {
-  
+
   "use strict";
-  
+
   var AttrBinding = JSONBinding.extend({
 
     _className: "AttrBinding",
