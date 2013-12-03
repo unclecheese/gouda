@@ -1,7 +1,7 @@
 define(['../core/core','../core/object'], function(Core, CydrObject) {
 
   "use strict";
-  
+
   var DataList = CydrObject.extend({
 
     _className: "DataList",
@@ -21,7 +21,10 @@ define(['../core/core','../core/object'], function(Core, CydrObject) {
     __construct: function (items) {
       if (!items) items = [];
       this._super();
-      this._items = items;
+      this._items = [];
+      for(var i in items) {
+        this._items.push(items[i]);
+      }
       this.filters = [];
       this.resultSet = [];
     },
@@ -39,7 +42,7 @@ define(['../core/core','../core/object'], function(Core, CydrObject) {
 
     push: function(data) {
       this._items.push(data);
-
+console.log("got new data", data);
       return this;
     },
 
@@ -49,7 +52,7 @@ define(['../core/core','../core/object'], function(Core, CydrObject) {
         filter: filter,
         value: value
       });
-      
+
       this.manipulated = true;
 
       return this;

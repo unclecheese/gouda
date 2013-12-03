@@ -1,17 +1,17 @@
-define(['./binding'], function(Binding) {
-	
+define(['./display'], function(DisplayBinding) {
+
 	"use strict";
-	
-	var HiddenBinding = Binding.extend({
+
+	var HiddenBinding = DisplayBinding.extend({
 
 	  _className: "HiddenBinding",
 
 	  importValue: function () {
 	  	var v = this.getValue();
 	    if (!v || v.isDataType && v.isFalsy()) {
-	      this.element.style.display = null;
+	      this.show(this.element);
 	    } else {
-	      this.element.style.display = "none";
+	      this.hide(this.element);
 	    }
 	  }
 

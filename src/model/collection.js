@@ -40,8 +40,7 @@ define(['../core/object', './datalist', './model'], function(CydrObject, DataLis
 
     push: function (model) {
       if(Model.prototype.frozen) return;
-
-      this._records.push(model);
+      this._records[model.getID()] = model;
       this.owner.notify(this.name);
     },
 
@@ -51,7 +50,7 @@ define(['../core/object', './datalist', './model'], function(CydrObject, DataLis
       if (!items) items = [];
 
       for(var i in items) {
-        this._records.push(items[i]);
+        this._records[items[i].getID()] = items[i];
       }
       this.owner.notify(this.name);
     },
@@ -60,6 +59,11 @@ define(['../core/object', './datalist', './model'], function(CydrObject, DataLis
       if(Model.prototype.frozen) return;
 
       this._records = [];
+      this.owner.notify(this.name);
+    },
+
+    removeByID: function (id) {
+      delete this._records[id];
       this.owner.notify(this.name);
     },
 

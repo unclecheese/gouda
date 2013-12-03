@@ -39,8 +39,8 @@ function(Core, DataType, Collection, CydrObject) {
             throw new Error("DataType '" + type + "' does not exist!");
             return false;
           }
-          this._mutatedProperties[name] = new Model.Cydr[type]()
-          var f = new Function("try {return this.obj('" + name + "');} catch(e) {console.error(e.message)}");
+          this._mutatedProperties[name] = new Model.Cydr[type]();
+          var f = new Function("value", "if(value !== undefined) {return this.set('" + name + "',value);} try {return this.obj('" + name + "');} catch(e) {console.error(e.message)}");
           this[name] = f.bind(this);
         }, this);
 
@@ -251,6 +251,10 @@ function(Core, DataType, Collection, CydrObject) {
 
     getCollection: function() {
       return this.collection;
+    },
+
+    delete: function () {
+      this.collection.removeByID(this.getID());
     },
 
     getViewModel: function() {
