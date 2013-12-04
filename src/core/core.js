@@ -23,6 +23,10 @@ define([], function() {
         var result = cb.apply(context ? context : window, [i, arr[i]]);
         if (result === false) break;
       }
+    },
+
+    trim: function(str) {
+       return str.replace(/^\s+|\s+$/g, '');
     }
   };
 
@@ -44,9 +48,6 @@ define([], function() {
         var e = evt.join(":");
         var subscribers = (Core.EventDispatcher.events[e]) || [];
         Core.Utils.forEach(subscribers, function(listenerID, func) {
-          if(prop == "CategoryFilter") {
-            console.log("firing", e);
-          }
           func(e, type, model, prop, id);
         });
       }

@@ -76,7 +76,10 @@ require(['../jasmine/testclasses'], function(Classes) {
         expect($("[cydr-content='FirstName']").html()).toEqual("Joe");
       });
 
-
+      it("Transforms comment tags into span tags with content bindings", function () {
+        expect($("#comment-test").find('span[cydr-content]').length).toEqual(2);
+        expect($('#comment-test span:first').text()).toEqual("Joe");
+      })
 
 
       it("Has a two-way 'value' binding", function () {
@@ -261,7 +264,9 @@ require(['../jasmine/testclasses'], function(Classes) {
     App = new Classes.App("#spec");
     Todo = Classes.Todo;
     Category = Classes.Category;
-    jasmineEnv.execute();
+    App.run(function() {
+      jasmineEnv.execute();
+    }); 
   });
 
 

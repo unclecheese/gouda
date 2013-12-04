@@ -17,11 +17,15 @@ define(['../core/object', './datalist', './model'], function(CydrObject, DataLis
       this.model = model;
       this.name = name;
       this._super();
-      this._records = [];
+      this._records = {};
     },
 
     count: function () {
-      return this._records.length;
+      var size = 0, key;
+      for (key in this._records) {
+        if (this._records.hasOwnProperty(key)) size++;
+      }
+      return size;      
     },
 
     get: function () {
@@ -38,9 +42,9 @@ define(['../core/object', './datalist', './model'], function(CydrObject, DataLis
       return this.owner.notify(this.name);
     },
 
-    push: function (model) {
-      if(Model.prototype.frozen) return;
-      this._records[model.getID()] = model;
+    push: function (model) {      
+      if(Model.prototype.frozen) return;      
+      this._records[model.getID()] = model;      
       this.owner.notify(this.name);
     },
 
@@ -70,6 +74,7 @@ define(['../core/object', './datalist', './model'], function(CydrObject, DataLis
     getOwner: function () {
       return this.owner;
     }
+
 
   });
 

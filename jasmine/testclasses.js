@@ -1,4 +1,4 @@
-define(["cydr"], function(Cydr) {
+define(["../src/main"], function(Cydr) {
 
     TestApp = Cydr.ViewModel.extend({
 

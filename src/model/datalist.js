@@ -42,7 +42,6 @@ define(['../core/core','../core/object'], function(Core, CydrObject) {
 
     push: function(data) {
       this._items.push(data);
-console.log("got new data", data);
       return this;
     },
 
