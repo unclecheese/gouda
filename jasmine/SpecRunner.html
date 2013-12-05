@@ -36,8 +36,17 @@
   <a cydr-click="set('FirstName','Susan')"></a>
   <div cydr-visible="IsMember"></div>
   <div cydr-hidden="IsMember"></div>
+  <!--{if IsMember}-->
+  <strong>You are a member, <!--{=FirstName}-->!</strong>
+  <!--{else}-->
+  <strong>You are not a member</strong>
+  <!--{endif}-->
+
+  <!--{loop Todos}-->
+  <span><!--{=Title}--></span>
+  <!--{endloop}-->
   <p>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></p>
-  <p id="comment-test"><!--{%= FirstName %}-->.... <!--{%= LastName %}--></p>
+  <p id="comment-test"><!--{= FirstName }-->.... <!--{= LastName }--></p>
   <h2>You have <span id="todocount" cydr-content="Todos().count()"></span> todos</h2>
 
   <h4>Add a todo</h4>
