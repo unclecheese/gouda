@@ -27,7 +27,22 @@ define([], function() {
 
     trim: function(str) {
        return str.replace(/^\s+|\s+$/g, '');
+    },
+
+    getStyle: function(element, property) {
+        var strValue = "";
+        if(document.defaultView && document.defaultView.getComputedStyle){
+            strValue = document.defaultView.getComputedStyle(element, "").getPropertyValue(property);
+        }
+        else if(element.currentStyle){
+            property = property.replace(/\-(\w)/g, function (strMatch, p1){
+                return p1.toUpperCase();
+            });
+            strValue = element.currentStyle[property];
+        }
+        return strValue;
     }
+
   };
 
 
