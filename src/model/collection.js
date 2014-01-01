@@ -1,8 +1,8 @@
-define(['../core/object', './datalist', './model'], function(CydrObject, DataList, Model) {
+define(['../core/object', './datalist', './model'], function(GoudaObject, DataList, Model) {
 
   "use strict";
 
-  var Collection = CydrObject.extend({
+  var Collection = GoudaObject.extend({
 
     _className: "Collection",
 

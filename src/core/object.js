@@ -1,18 +1,18 @@
-define(['./base','./core'], function(Class, Cydr) {
+define(['./base','./core'], function(Class, Gouda) {
 
   "use strict";
   
-  var CydrObject = Class.extend({
+  var GoudaObject = Class.extend({
 
     _instanceCount: 0,
 
     __ID__: null,
 
-    _className: "CydrObject",
+    _className: "GoudaObject",
 
     __construct: function() {
-      CydrObject.prototype._instanceCount++;
-      this.__ID__ = CydrObject.prototype._instanceCount;
+      GoudaObject.prototype._instanceCount++;
+      this.__ID__ = GoudaObject.prototype._instanceCount;
     },
 
     getClass: function() {
@@ -25,47 +25,47 @@ define(['./base','./core'], function(Class, Cydr) {
     },
 
     getConfig: function (prop, key) {
-      if(!Cydr.Config[this.getClass()]) {
-        Cydr.Config[this.getClass()] = []
+      if(!Gouda.Config[this.getClass()]) {
+        Gouda.Config[this.getClass()] = []
       }
       if(key) {
-        if(!Cydr.Config[this.getClass()][prop]) {
-          Cydr.Config[this.getClass()][prop] = []
+        if(!Gouda.Config[this.getClass()][prop]) {
+          Gouda.Config[this.getClass()][prop] = []
         }
-        return Cydr.Config[this.getClass()][prop][key];
+        return Gouda.Config[this.getClass()][prop][key];
       }
 
-      return Cydr.Config[this.getClass()][prop];
+      return Gouda.Config[this.getClass()][prop];
     },
 
 
     setConfig: function (prop, val) {
-      if(!Cydr.Config[this.getClass()]) {
-        Cydr.Config[this.getClass()] = []
+      if(!Gouda.Config[this.getClass()]) {
+        Gouda.Config[this.getClass()] = []
       }
-      Cydr.Config[this.getClass()][prop] = val;
+      Gouda.Config[this.getClass()][prop] = val;
     },
 
     pushConfig: function (prop, val1, val2) {
-      if(!Cydr.Config[this.getClass()]) {
-        Cydr.Config[this.getClass()] = [];
+      if(!Gouda.Config[this.getClass()]) {
+        Gouda.Config[this.getClass()] = [];
       }
-      if(!Cydr.Config[this.getClass()][prop]) {
-        Cydr.Config[this.getClass()][prop] = [];
+      if(!Gouda.Config[this.getClass()][prop]) {
+        Gouda.Config[this.getClass()][prop] = [];
       }
       if(val2) {
-        if(!Cydr.Config[this.getClass()][prop][val1]) {
-          Cydr.Config[this.getClass()][prop][val1] = [];
+        if(!Gouda.Config[this.getClass()][prop][val1]) {
+          Gouda.Config[this.getClass()][prop][val1] = [];
         }
-        Cydr.Config[this.getClass()][prop][val1].push(val2);
+        Gouda.Config[this.getClass()][prop][val1].push(val2);
       }
 
       else {
-        Cydr.Config[this.getClass()][prop].push(val1);
+        Gouda.Config[this.getClass()][prop].push(val1);
       }
     }
 
   });
 
-  return CydrObject;
+  return GoudaObject;
 });

@@ -123,17 +123,16 @@ define([], function() {
       for(i in nodes) {
         current = nodes[i];
         if (current.nodeType === 1) {
-            if((block = this._currentIfBlock()) && (this._currentIfDepth() <= depth)) {
-              console.log(block);
-              current.setAttribute(this.ifNegation ? "cydr-hidden" : "cydr-visible", block);
-            }
-            else if((block = this._currentLoopBlock()) && (this._currentLoopDepth() <= depth)) {
-              current.setAttribute("cydr-repeat", block);
-            }
-            else {
+            // if((block = this._currentIfBlock()) && (this._currentIfDepth() <= depth)) {
+            //   current.setAttribute(this.ifNegation ? "gd-hidden" : "gd-visible", block);
+            // }
+            // else if((block = this._currentLoopBlock()) && (this._currentLoopDepth() <= depth)) {
+            //   current.setAttribute("gd-repeat", block);
+            // }
+//            else {
               this.parseComments(current, depth+1);
               continue;
-            }
+//            }
         }
 
         data = (current.nodeType === 8) ? current.data : (current.nodeType === 3 ? current.nodeValue : false);
@@ -146,9 +145,10 @@ define([], function() {
     },
 
     _matchTag: function (current, data, depth) {
-      return this._matchOutput(current, data) ||
-             this._matchLoopBlock(current, data, depth) ||
-             this._matchIfBlock(current, data, depth);
+      return this._matchOutput(current, data);
+       // ||
+       //       this._matchLoopBlock(current, data, depth) ||
+       //       this._matchIfBlock(current, data, depth);
     },
 
     _matchOutput: function (current, data) {
@@ -156,7 +156,7 @@ define([], function() {
           matches = data.match(new RegExp(this.RXP_OUTPUT_VAR));
       if(matches) {
         replacement = document.createElement("SPAN");
-        replacement.setAttribute("cydr-content", Core.Utils.trim(matches[1]));
+        replacement.setAttribute("gd-content", Core.Utils.trim(matches[1]));
         current.parentNode.replaceChild(replacement ,current);
         return true;
       }
@@ -185,7 +185,6 @@ define([], function() {
       var matches, nodes;
           nodes;
       if(matches = data.match(new RegExp(this.RXP_IF_BLOCK))) {
-        console.log("found if block!!", matches);
         this.ifNegation = false;
         this.ifStack.push(Core.Utils.trim(matches[1]));
         this.ifOpenDepths.push(depth);

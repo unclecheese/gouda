@@ -88,7 +88,7 @@ define(['../core/core','../core/object','../model/model'], function(Core, CoreOb
 
     getBindingAttribute: function () {
       var klass = this.getClass().replace(/Binding$/, '');
-      return "cydr-" + klass.toLowerCase();
+      return "gd-" + klass.toLowerCase();
     },
 
 

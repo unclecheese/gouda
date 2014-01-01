@@ -14,13 +14,13 @@ define(['./binding', '../core/core'], function (Binding, Core) {
             }
 
             tag = element.nodeName;
-            computed = Core.getStyle(element, "display");
+            computed = Core.Utils.getStyle(element, "display");
             if(computed === "none") {
                 shouldDisplay = this._elementDisplay[tag];
                 if(!shouldDisplay) {
                     temp = document.createElement(tag);
                     document.getElementsByTagName('body')[0].appendChild(temp);
-                    shouldDisplay = Core.getStyle(temp, "display");
+                    shouldDisplay = Core.Utils.getStyle(temp, "display");
                     document.getElementsByTagName('body')[0].removeChild(temp);
                     this._elementDisplay[tag] = shouldDisplay;
                 }

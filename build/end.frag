@@ -2,37 +2,37 @@
 
 
 
-    var Cydr = {};
+    var Gouda = {};
 
-    Cydr.Collection             = require('src/model/collection');
-    Cydr.Model                  = require('src/model/model');
-    Cydr.DataList               = require('src/model/datalist');
-    Cydr.ViewModel              = require('src/model/viewmodel');
-    Cydr.JSONData               = require('src/model/jsondata');
+    Gouda.Collection             = require('src/model/collection');
+    Gouda.Model                  = require('src/model/model');
+    Gouda.DataList               = require('src/model/datalist');
+    Gouda.ViewModel              = require('src/model/viewmodel');
+    Gouda.JSONData               = require('src/model/jsondata');
 
-    Cydr.Boolean                = require('src/datatypes/boolean');
-    Cydr.HTMLText               = require('src/datatypes/htmltext');
-    Cydr.Text                   = require('src/datatypes/text');
-    Cydr.Float                  = require('src/datatypes/float');
-    Cydr.Int                    = require('src/datatypes/int');
+    Gouda.Boolean                = require('src/datatypes/boolean');
+    Gouda.HTMLText               = require('src/datatypes/htmltext');
+    Gouda.Text                   = require('src/datatypes/text');
+    Gouda.Float                  = require('src/datatypes/float');
+    Gouda.Int                    = require('src/datatypes/int');
 
-    Cydr.CheckedBinding         = require('src/bindings/checked');
-    Cydr.ClickBinding           = require('src/bindings/click');
-    Cydr.ContentBinding         = require('src/bindings/content');
-    Cydr.HiddenBinding          = require('src/bindings/hidden');
-    Cydr.VisibleBinding         = require('src/bindings/visible');
-    Cydr.SubmitBinding          = require('src/bindings/submit');
-    Cydr.ValueBinding           = require('src/bindings/value');
-    Cydr.AttrBinding            = require('src/bindings/json/attr');
-    Cydr.ExtraclassesBinding    = require('src/bindings/json/extraclasses');
-    Cydr.LoopBinding            = require('src/bindings/loop/loop');
-    Cydr.OptionsBinding         = require('src/bindings/loop/options');
+    Gouda.CheckedBinding         = require('src/bindings/checked');
+    Gouda.ClickBinding           = require('src/bindings/click');
+    Gouda.ContentBinding         = require('src/bindings/content');
+    Gouda.HiddenBinding          = require('src/bindings/hidden');
+    Gouda.VisibleBinding         = require('src/bindings/visible');
+    Gouda.SubmitBinding          = require('src/bindings/submit');
+    Gouda.ValueBinding           = require('src/bindings/value');
+    Gouda.AttrBinding            = require('src/bindings/json/attr');
+    Gouda.ExtraclassesBinding    = require('src/bindings/json/extraclasses');
+    Gouda.LoopBinding            = require('src/bindings/loop/loop');
+    Gouda.OptionsBinding         = require('src/bindings/loop/options');
 
-    Cydr.Model.Cydr = Cydr;
-    Cydr.Model.Collection = Cydr.Collection;
-    Cydr.Collection.Model = Cydr.Model;
+    Gouda.Model.Gouda = Gouda;
+    Gouda.Model.Collection = Gouda.Collection;
+    Gouda.Collection.Model = Gouda.Model;
 
-    return Cydr;
+    return Gouda;
 
 
 }));

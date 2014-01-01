@@ -1,8 +1,8 @@
-define(['../core/object'], function(CydrObject) {
+define(['../core/object'], function(GoudaObject) {
   
   "use strict";
   
-  var DataType = CydrObject.extend({
+  var DataType = GoudaObject.extend({
 
     _className: "DataType",
 

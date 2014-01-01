@@ -17,18 +17,18 @@ define(['../../core/core','./loop'], function(Core, LoopBinding) {
 
     initialize: function () {
       if (this.element.tagName != "SELECT") {
-        console.error("cydr-options binding must be on a select element.");
+        console.error("gd-options binding must be on a select element.");
       }
 
-      this.valueField = this.element.getAttribute("cydr-optionvalue");
-      this.textField = this.element.getAttribute("cydr-optiontext");
-      this.caption = this.element.getAttribute("cydr-optioncaption");
+      this.valueField = this.element.getAttribute("gd-optionvalue");
+      this.textField = this.element.getAttribute("gd-optiontext");
+      this.caption = this.element.getAttribute("gd-optioncaption");
 
       // ensure the value attribute goes last
-      var v = this.element.getAttribute("cydr-value");
+      var v = this.element.getAttribute("gd-value");
       if (v) {
-        this.element.removeAttribute("cydr-value");
-        this.element.setAttribute("cydr-value", v);
+        this.element.removeAttribute("gd-value");
+        this.element.setAttribute("gd-value", v);
       }
       this.subscribe();
       this.importValue();
@@ -38,9 +38,9 @@ define(['../../core/core','./loop'], function(Core, LoopBinding) {
 
     importValue: function () {
       this.clearContents();
-      var val = this.element.getAttribute("cydr-value");
+      var val = this.element.getAttribute("gd-value");
       if(!val) {
-        console.error("cydr-options binding assigned to an element with no cydr-value binding", this.element);
+        console.error("gd-options binding assigned to an element with no gd-value binding", this.element);
       }
       if (this.caption) {
         var dummy = document.createElement("option");
@@ -53,8 +53,8 @@ define(['../../core/core','./loop'], function(Core, LoopBinding) {
       var originalOptions = self.element.childNodes;
       list.each(function (model) {
         var opt = document.createElement("option");
-        opt.setAttribute("cydr-content", self.textField);
-        opt.setAttribute("cydr-attr", "{value: " + self.valueField + "}");
+        opt.setAttribute("gd-content", self.textField);
+        opt.setAttribute("gd-attr", "{value: " + self.valueField + "}");
         var val1 = model.exec(self.valueField);
         var val2 = self.model.exec(val);
 

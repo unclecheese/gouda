@@ -1,9 +1,9 @@
 define(['../core/core','../datatypes/datatype','./collection','../core/object'],
-function(Core, DataType, Collection, CydrObject) {
+function(Core, DataType, Collection, GoudaObject) {
 
   "use strict";
 
-  var Model = CydrObject.extend({
+  var Model = GoudaObject.extend({
 
       _className: "Model",
 
@@ -35,11 +35,11 @@ function(Core, DataType, Collection, CydrObject) {
         this._mutatedProperties = {};
         this._mutatedCollections = {};
         Core.Utils.forEach(this.properties, function (name, type) {
-          if (!Model.Cydr[type] || !Model.Cydr[type].prototype.isDataType) {
+          if (!Model.Gouda[type] || !Model.Gouda[type].prototype.isDataType) {
             throw new Error("DataType '" + type + "' does not exist!");
             return false;
           }
-          this._mutatedProperties[name] = new Model.Cydr[type]();
+          this._mutatedProperties[name] = new Model.Gouda[type]();
           var f = new Function("value", "if(value !== undefined) {return this.set('" + name + "',value);} try {return this.obj('" + name + "');} catch(e) {console.error(e.message)}");
           this[name] = f.bind(this);
         }, this);
@@ -62,7 +62,7 @@ function(Core, DataType, Collection, CydrObject) {
           }
         }, this);
 
-        this._mutatedProperties["__id__"] = CydrObject.prototype._instanceCount;
+        this._mutatedProperties["__id__"] = GoudaObject.prototype._instanceCount;
         this._mutatedProperties["__destroyed__"] = false;
     },
 
@@ -113,7 +113,7 @@ function(Core, DataType, Collection, CydrObject) {
           this.currentBinding = null;
         } catch (e) {
           console.error("Could not run expression '" + func.toString() + "'");
-          console.log(e.message);
+          console.log('Message:"', e.message, '" Element:', binding.element);          
           return new DataType("");
         }
         return result;
@@ -164,11 +164,11 @@ function(Core, DataType, Collection, CydrObject) {
     castFunction: function (func) {
       if(!ret.isDataType && !ret.isDataList) {
         var dataType = this.casting[func] || "Text";
-        if(typeof Model.Cydr[dataType] != "function") {
+        if(typeof Model.Gouda[dataType] != "function") {
           console.error("Tried to cast "+func+" as "+dataType+", but that datatype doesn't exist.");
           return;
         }
-        return new Model.Cydr[dataType](ret);
+        return new Model.Gouda[dataType](ret);
       }
 
       return ret;
@@ -197,15 +197,15 @@ function(Core, DataType, Collection, CydrObject) {
 
 
     bindToElement: function (el, parentBinding) {
-      var rx = new RegExp('^cydr-', 'i');
+      var rx = new RegExp('^gd-', 'i');
       var alpha = new RegExp('^[a-z0-9_]+$', 'i');
       var atts = el.attributes || []
       Core.Utils.forEach(atts, function (i, att) {
         if (rx.test(att.name)) {
           var type = att.name.split("-").pop();
           var klass = type.charAt(0).toUpperCase() + type.slice(1) + "Binding";
-          if (typeof Model.Cydr[klass] == "function" && Model.Cydr[klass].prototype.isDataBinding) {
-            var binding = new Model.Cydr[klass](this, el, parentBinding);
+          if (typeof Model.Gouda[klass] == "function" && Model.Gouda[klass].prototype.isDataBinding) {
+            var binding = new Model.Gouda[klass](this, el, parentBinding);
             binding.initialize();
           }
         }
@@ -223,10 +223,10 @@ function(Core, DataType, Collection, CydrObject) {
       }
 
       els.unshift(node);
-      var rx = new RegExp('^cydr-', 'i');
+      var rx = new RegExp('^gd-', 'i');
       Core.Utils.forEach(els, function (i, el) {
         var atts = (el && el.attributes) ? el.attributes : [];
-        if (el && typeof el.getAttribute == "function" && !el.getAttribute("cydr-ignore")) {
+        if (el && typeof el.getAttribute == "function" && !el.getAttribute("gd-ignore")) {
           for (var att in atts) {
             if (rx.test(atts[att].name)) {
               this.bindToElement(el, parentBinding);

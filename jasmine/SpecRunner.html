@@ -27,60 +27,55 @@
 
 <body>
 <div id="spec">
-  <span cydr-content="FirstName"></span>
-  <input type="text" cydr-value="FirstName" />
-  <input type="text" cydr-value="LastName" />
-  <input type="checkbox" cydr-checked="IsMember" /> Member?
-  <div id="extraclass" cydr-extraclasses="{ismember: IsMember}"></div>
-  <a id="attribute" cydr-attr="{href: FirstName}"></a>
-  <a cydr-click="set('FirstName','Susan')"></a>
-  <div cydr-visible="IsMember"></div>
-  <div cydr-hidden="IsMember"></div>
-  <!--{if IsMember}-->
-  <strong>You are a member, <!--{=FirstName}-->!</strong>
-  <!--{else}-->
-  <strong>You are not a member</strong>
-  <!--{endif}-->
+  <span gd-content="FirstName"></span>
+  <input type="text" gd-value="FirstName" />
+  <input type="text" gd-value="LastName" />
+  <input type="checkbox" gd-checked="IsMember" /> Member?
+  <div id="extraclass" gd-extraclasses="{ismember: IsMember}"></div>
+  <a id="attribute" gd-attr="{href: FirstName}"></a>
+  <a gd-click="set('FirstName','Susan')"></a>
+  <div gd-visible="IsMember"></div>
+  <div gd-hidden="IsMember"></div>
+  
 
-  <!--{loop Todos}-->
-  <span><!--{=Title}--></span>
-  <!--{endloop}-->
-  <p>Hello, <span cydr-visible="IsMember">Member </span><span id="fullname" cydr-content="FullName"></span></p>
+
+
+  <p>Hello, <span gd-visible="IsMember">Member </span><span id="fullname" gd-content="FullName"></span></p>
   <p id="comment-test"><!--{= FirstName }-->.... <!--{= LastName }--></p>
-  <h2>You have <span id="todocount" cydr-content="Todos().count()"></span> todos</h2>
+  <h2>You have <span id="todocount" gd-content="Todos().count()"></span> todos</h2>
 
   <h4>Add a todo</h4>
-  <form id="todo-add" cydr-submit="createTodo">
+  <form id="todo-add" gd-submit="createTodo">
     <input name="Title" type="text" placeholder="Title of todo..." /><br />
     Category:
-    <select cydr-options="Categories" cydr-optionvalue="Title" cydr-optiontext="Title" name="Category" cydr-value="CategoryFilter"></select><br />
+    <select gd-options="Categories" gd-optionvalue="Title" gd-optiontext="Title" name="Category" gd-value="CategoryFilter"></select><br />
     <input type="checkbox" name="IsDone" /> This todo is done<br />
     <button type="submit">Add this todo</button>
   </form>
   <div style="float:left;width:300px">
     All Todos:
-    <ul id="todoloop" cydr-loop="Todos">
-        <li cydr-extraclasses="{done: IsDone}">
-          <input type="checkbox" cydr-checked="IsDone" /> <span cydr-content="Title"></span> [<span cydr-content="Category"></span>]
-          <select cydr-value="Category" cydr-options="Up().Categories()" cydr-optiontext="Title" cydr-optionvalue="Title"  ></select>
+    <ul id="todoloop" gd-loop="Todos">
+        <li gd-extraclasses="{done: IsDone}">
+          <input type="checkbox" gd-checked="IsDone" /> <span gd-content="Title"></span> [<span gd-content="Category"></span>]
+          <select gd-value="Category" gd-options="Up().Categories()" gd-optiontext="Title" gd-optionvalue="Title"  ></select>
         </li>
 
     </ul>
   </div>
   <div style="float:left;width:300px">
   Filter by category:
-    <select id="optionsbinding" cydr-optionscaption="-- Please select --" cydr-options="Categories" cydr-optiontext="Title" cydr-optionvalue="Title" cydr-value="CategoryFilter"></select>
-    (<span cydr-content="CategoryFilter"></span>)
-    <ul id="fiteredtodoloop" cydr-loop="FilteredTodos">
-      <li><i cydr-content="Title"></i> <i cydr-content="Category"></i></li>
+    <select id="optionsbinding" gd-optionscaption="-- Please select --" gd-options="Categories" gd-optiontext="Title" gd-optionvalue="Title" gd-value="CategoryFilter"></select>
+    (<span gd-content="CategoryFilter"></span>)
+    <ul id="fiteredtodoloop" gd-loop="FilteredTodos">
+      <li><i gd-content="Title"></i> <i gd-content="Category"></i></li>
     </ul>
 
   </div>
 
 <div style="float:left;width:300px">
   <h3>Competed Todos</h3>
-  <ul cydr-loop="CompetedTodos">
-    <li><span cydr-content="Title"></span></li>
+  <ul gd-loop="CompetedTodos">
+    <li><span gd-content="Title"></span></li>
   </ul>
 </div>
   <div style="clear:both;">&nbsp;</div>

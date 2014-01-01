@@ -1,6 +1,6 @@
-define(["../src/main"], function(Cydr) {
+define(["../src/main"], function(Gouda) {
 
-    TestApp = Cydr.ViewModel.extend({
+    TestApp = Gouda.ViewModel.extend({
 
       _className : "TestApp",
 
@@ -51,7 +51,7 @@ define(["../src/main"], function(Cydr) {
     });
 
 
-    Todo = Cydr.Model.extend({
+    Todo = Gouda.Model.extend({
 
       _className: "Todo",
 
@@ -75,7 +75,7 @@ define(["../src/main"], function(Cydr) {
     });
 
 
-    Category = Cydr.Model.extend({
+    Category = Gouda.Model.extend({
 
     _className: "Category",
 

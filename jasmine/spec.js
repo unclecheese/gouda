@@ -73,11 +73,11 @@ require(['../jasmine/testclasses'], function(Classes) {
 
       it("Has a functioning 'content' binding", function () {
         App.set("FirstName", "Joe");
-        expect($("[cydr-content='FirstName']").html()).toEqual("Joe");
+        expect($("[gd-content='FirstName']").html()).toEqual("Joe");
       });
 
       it("Transforms comment tags into span tags with content bindings", function () {
-        expect($("#comment-test").find('span[cydr-content]').length).toEqual(2);
+        expect($("#comment-test").find('span[gd-content]').length).toEqual(2);
         expect($('#comment-test span:first').text()).toEqual("Joe");
       })
 
@@ -86,12 +86,12 @@ require(['../jasmine/testclasses'], function(Classes) {
         var e;
 
         App.set("FirstName", "Bob");
-        expect($("input[cydr-value='FirstName']").val()).toEqual("Bob");
-        expect($("[cydr-content='FirstName']").html()).toEqual("Bob");
+        expect($("input[gd-value='FirstName']").val()).toEqual("Bob");
+        expect($("[gd-content='FirstName']").html()).toEqual("Bob");
         e = document.createEvent("HTMLEvents");
         e.initEvent("change");
-        $("input[cydr-value='FirstName']").val("Roger")[0].dispatchEvent(e);
-        $("[cydr-content='FirstName']").each(function () {
+        $("input[gd-value='FirstName']").val("Roger")[0].dispatchEvent(e);
+        $("[gd-content='FirstName']").each(function () {
           expect($(this).html()).toEqual("Roger");
         });
         expect(App.get("FirstName")).toEqual("Roger");
@@ -104,10 +104,10 @@ require(['../jasmine/testclasses'], function(Classes) {
         var e;
 
         App.set("IsMember", true);
-        expect($("input[cydr-checked='IsMember']")).toBeChecked();
+        expect($("input[gd-checked='IsMember']")).toBeChecked();
         e = document.createEvent("HTMLEvents");
         e.initEvent("change");
-        $("input[cydr-checked='IsMember']").attr("checked", false)[0].dispatchEvent(e);
+        $("input[gd-checked='IsMember']").attr("checked", false)[0].dispatchEvent(e);
         expect(App.get("IsMember")).toBeFalsy();
       });
 
@@ -137,7 +137,7 @@ require(['../jasmine/testclasses'], function(Classes) {
 
         e = document.createEvent("MouseEvents");
         e.initEvent("click");
-        $('[cydr-click]')[0].dispatchEvent(e);
+        $('[gd-click]')[0].dispatchEvent(e);
         expect(App.get("FirstName")).toEqual("Susan");
       });
 
@@ -146,9 +146,9 @@ require(['../jasmine/testclasses'], function(Classes) {
 
       it("Has a visible binding", function () {
         App.set("IsMember", true);
-        expect($('[cydr-visible]')).toBeVisible();
+        expect($('[gd-visible]')).toBeVisible();
         App.set("IsMember", false);
-        expect($('[cydr-visible]')).toBeHidden();
+        expect($('[gd-visible]')).toBeHidden();
       });
 
 
@@ -156,9 +156,9 @@ require(['../jasmine/testclasses'], function(Classes) {
 
       it("Has a hidden binding", function () {
         App.set("IsMember", true);
-        expect($('[cydr-hidden]')).toBeHidden();
+        expect($('[gd-hidden]')).toBeHidden();
         App.set("IsMember", false);
-        expect($('[cydr-hidden]')).toBeVisible();
+        expect($('[gd-hidden]')).toBeVisible();
       });
 
 
@@ -209,10 +209,10 @@ require(['../jasmine/testclasses'], function(Classes) {
           }));
           $todo4 = $('#todoloop > li').eq(3);
           $todo5 = $('#todoloop > li').eq(4);
-          expect($todo4.find('span[cydr-content]').html()).toEqual("Todo4");
+          expect($todo4.find('span[gd-content]').html()).toEqual("Todo4");
           expect($todo4.hasClass("done")).toBeFalsy();
           expect($todo5.find('input')).toBeChecked();
-          expect($todo5.find('span[cydr-content]').html()).toEqual("Todo5");
+          expect($todo5.find('span[gd-content]').html()).toEqual("Todo5");
           expect($todo5).toHaveClass("done");
         });
       });

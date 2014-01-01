@@ -78,7 +78,7 @@ define(['../binding'], function(Binding) {
       for(i in nodeList) {
         n = nodeList[i];
         if (typeof n.setAttribute == "function") {
-          n.setAttribute("cydr-ignore", "true");
+          n.setAttribute("gd-ignore", "true");
         }
       }
 
@@ -91,7 +91,7 @@ define(['../binding'], function(Binding) {
       for(i in nodeList) {
         n = nodeList[i];
         if (typeof n.removeAttribute == "function") {
-          n.removeAttribute("cydr-ignore");
+          n.removeAttribute("gd-ignore");
         }
       }
       this.template = dummy;
@@ -130,7 +130,7 @@ define(['../binding'], function(Binding) {
             var n = node.cloneNode(true);
             self.element.appendChild(n);
             if (typeof n.removeAttribute == "function") {
-              n.removeAttribute("cydr-ignore");
+              n.removeAttribute("gd-ignore");
             }
             model.applyBindingsToNode(n, self);
             self.addCachedNode(model.getID(), n);
